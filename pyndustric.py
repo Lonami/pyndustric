@@ -268,7 +268,7 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_COMPLEX_VALUE, node)
 
     def generate_masm(self):
-        return '\n'.join(self._ins)
+        return '\n'.join(self._ins) + '\nend\n'
 
 def main():
     for file in sys.argv[1:]:

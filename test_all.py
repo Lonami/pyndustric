@@ -3,6 +3,10 @@ import pytest
 import textwrap
 
 
+def as_masm(source):
+    return textwrap.dedent(source).strip() + '\nend\n'
+
+
 def test_all_err_have_desc_and_tests():
     error_names = [name for name in dir(pyndustric) if name.startswith('ERR_')]
     error_values = {getattr(pyndustric, name) for name in error_names}
@@ -86,12 +90,12 @@ def test_assignments():
     source = textwrap.dedent('''\
         x = 1
         z = x + 2
-        ''').strip()
+        ''')
 
-    expected = textwrap.dedent('''\
+    expected = as_masm('''\
         set x 1
         op add z x 2
-        ''').strip()
+        ''')
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
@@ -103,16 +107,16 @@ def test_if():
         if x:
             y = 1
         z = 1
-        ''').strip()
+        ''')
 
     # TODO negate initial jmp condition with no else
-    expected = textwrap.dedent('''\
+    expected = as_masm('''\
         set x 1
         jump 3 notEqual x 0
         jump 4 always
         set y 1
         set z 1
-        ''').strip()
+        ''')
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
@@ -126,16 +130,16 @@ def test_if_else():
         else:
             y = 0
         z = 1
-        ''').strip()
+        ''')
 
-    expected = textwrap.dedent('''\
+    expected = as_masm('''\
         set x 1
         jump 4 notEqual x 0
         set y 0
         jump 5 always
         set y 1
         set z 1
-        ''').strip()
+        ''')
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
@@ -147,15 +151,15 @@ def test_while():
         while x:
             x = x - 1
         z = 1
-        ''').strip()
+        ''')
 
-    expected = textwrap.dedent('''\
+    expected = as_masm('''\
         set x 10
         jump 3 always
         op sub x x 1
         jump 2 notEqual x 0
         set z 1
-        ''').strip()
+        ''')
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
@@ -166,16 +170,16 @@ def test_for():
         for x in range(10):
             y = x + x
         z = 1
-        ''').strip()
+        ''')
 
-    expected = textwrap.dedent('''\
+    expected = as_masm('''\
         set x 0
         jump 5 greaterThanEq x 10
         op add y x x
         op add x x 1
         jump 1 always
         set z 1
-        ''').strip()
+        ''')
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
@@ -183,7 +187,7 @@ def test_for():
     source = textwrap.dedent('''\
         for x in range(5, 10):
             y = x + x
-        ''').strip()
+        ''')
 
     masm = pyndustric.Compiler().compile(source)
     assert 'set x 5' in masm
@@ -191,7 +195,7 @@ def test_for():
     source = textwrap.dedent('''\
         for x in range(0, 10, 3):
             y = x + x
-        ''').strip()
+        ''')
 
     masm = pyndustric.Compiler().compile(source)
     assert 'op add x x 3' in masm
@@ -211,9 +215,9 @@ def test_draw():
         Screen.hollow_poly(60, 60, 20, 5)
         Screen.triangle(70, 80, 80, 80, 80, 70)
         Screen.flush()
-        ''').strip()
+        ''')
 
-    expected = textwrap.dedent('''\
+    expected = as_masm('''\
         draw clear 255 0 0
         draw color 0 255 255 255
         draw stroke 2
@@ -224,7 +228,7 @@ def test_draw():
         draw linePoly 60 60 5 20 0
         draw triangle 70 80 80 80 80 70
         drawflush display1
-        ''').strip()
+        ''')
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
