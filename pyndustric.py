@@ -100,6 +100,18 @@ class Compiler(ast.NodeVisitor):
             val = self.as_value(value)
             self._ins.append(f'set {target.id} {val}')
 
+    def visit_AugAssign(self, node: ast.Assign):
+        target = node.target
+        if not isinstance(target, ast.Name):
+            raise CompilerError(ERR_COMPLEX_ASSIGN, node)
+
+        op = BIN_OPS.get(type(node.op))
+        if op is None:
+            raise CompilerError(ERR_UNSUPPORTED_OP, node)
+
+        right = self.as_value(node.value)
+        self._ins.append(f'op {op} {target.id} {target.id} {right}')
+
     def visit_If(self, node):
         if isinstance(node.test, ast.Compare):
             if len(node.test.ops) != 1 or len(node.test.comparators) != 1:
