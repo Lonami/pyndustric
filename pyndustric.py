@@ -141,7 +141,7 @@ class Compiler(ast.NodeVisitor):
         elif argc == 2:
             start, end, step = *map(self.as_value, argv), 1
         elif argc == 3:
-            start, end, step = map(self.as_value(argv))
+            start, end, step = map(self.as_value, argv)
         else:
             raise CompilerError(ERR_BAD_ITER_ARGS, node)
 

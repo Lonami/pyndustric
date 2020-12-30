@@ -180,6 +180,22 @@ def test_for():
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
+    source = textwrap.dedent('''\
+        for x in range(5, 10):
+            y = x + x
+        ''').strip()
+
+    masm = pyndustric.Compiler().compile(source)
+    assert 'set x 5' in masm
+
+    source = textwrap.dedent('''\
+        for x in range(0, 10, 3):
+            y = x + x
+        ''').strip()
+
+    masm = pyndustric.Compiler().compile(source)
+    assert 'op add x x 3' in masm
+
 
 def test_draw():
     source = textwrap.dedent('''\
