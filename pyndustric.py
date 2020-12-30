@@ -29,6 +29,16 @@ ERROR_DESCRIPTIONS = {
     ERR_BAD_SYSCALL_ARGS: 'invalid syscall arguments',
 }
 
+BIN_CMP = {
+    ast.Eq: 'equal',
+    ast.NotEq: 'notEqual',
+    ast.And: 'land',
+    ast.Lt: 'lessThan',
+    ast.LtE: 'lessThanEq',
+    ast.Gt: 'greaterThan',
+    ast.GtE: 'greaterThanEq',
+}
+
 BIN_OPS = {
     ast.Add: 'add',
     ast.Sub: 'sub',
@@ -37,18 +47,12 @@ BIN_OPS = {
     ast.FloorDiv: 'idiv',
     ast.Mod: 'mod',
     ast.Pow: 'pow',
-    ast.Eq: 'equal',
-    ast.NotEq: 'notEqual',
-    ast.And: 'land',
-    ast.Lt: 'lessThan',
-    ast.LtE: 'lessThanEq',
-    ast.Gt: 'greaterThan',
-    ast.GtE: 'greaterThanEq',
     ast.LShift: 'shl',
     ast.RShift: 'shr',
     ast.BitOr: 'or',
     ast.BitAnd: 'and',
     ast.BitXor: 'xor',
+    **BIN_CMP,
 }
 
 class CompilerError(ValueError):
@@ -97,8 +101,21 @@ class Compiler(ast.NodeVisitor):
             self._ins.append(f'set {target.id} {val}')
 
     def visit_If(self, node):
-        test = self.as_value(node.test)
-        self._ins.append(f'jump {{}} notEqual {test} 0')
+        if isinstance(node.test, ast.Compare):
+            if len(node.test.ops) != 1 or len(node.test.comparators) != 1:
+                raise CompilerError(ERR_UNSUPPORTED_EXPR)
+
+            cmp = BIN_CMP.get(type(node.test.ops[0]))
+            if cmp is None:
+                raise CompilerError(ERR_UNSUPPORTED_OP, node)
+
+            left = self.as_value(node.test.left)
+            right = self.as_value(node.test.comparators[0])
+            self._ins.append(f'jump {{}} {cmp} {left} {right}')
+        else:
+            test = self.as_value(node.test)
+            self._ins.append(f'jump {{}} notEqual {test} 0')
+
         initial = len(self._ins) - 1
 
         for subnode in node.orelse:

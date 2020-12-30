@@ -122,6 +122,24 @@ def test_if():
     assert masm == expected
 
 
+def test_complex_if():
+    source = textwrap.dedent('''\
+        x = 1
+        if x < 10:
+            y = 1
+        ''')
+
+    expected = as_masm('''\
+        set x 1
+        jump 3 lessThan x 10
+        jump 4 always
+        set y 1
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
 def test_if_else():
     source = textwrap.dedent('''\
         x = 1
