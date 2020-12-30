@@ -26,6 +26,19 @@ def test_err_unsupported_op():
         pyndustric.Compiler().compile('a = m0 @ m1')
 
 
+def test_err_unsupported_iter():
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_ITER):
+        pyndustric.Compiler().compile('for x in [1, 2]: pass')
+
+
+def test_err_bad_iter_args():
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_ITER_ARGS):
+        pyndustric.Compiler().compile('for x in range(): pass')
+
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_ITER_ARGS):
+        pyndustric.Compiler().compile('for x in range(1, 2, 3, 4): pass')
+
+
 def test_assignments():
     source = textwrap.dedent('''\
         x = 1
@@ -98,6 +111,26 @@ def test_while():
         jump 3 always
         op sub x x 1
         jump 2 notEqual x 0
+        set z 1
+        ''').strip()
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
+def test_for():
+    source = textwrap.dedent('''\
+        for x in range(10):
+            y = x + x
+        z = 1
+        ''').strip()
+
+    expected = textwrap.dedent('''\
+        set x 0
+        jump 5 greaterThanEq x 10
+        op add y x x
+        op add x x 1
+        jump 1 always
         set z 1
         ''').strip()
 

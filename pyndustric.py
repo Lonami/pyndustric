@@ -9,12 +9,16 @@ ERR_MULTI_ASSIGN = 'E001'
 ERR_COMPLEX_ASSIGN = 'E002'
 ERR_COMPLEX_VALUE = 'E003'
 ERR_UNSUPPORTED_OP = 'E004'
+ERR_UNSUPPORTED_ITER = 'E005'
+ERR_BAD_ITER_ARGS = 'E006'
 
 ERROR_DESCRIPTIONS = {
     ERR_MULTI_ASSIGN: 'can only assign to 1 target',
     ERR_COMPLEX_ASSIGN: 'cannot perform complex assignment',
     ERR_COMPLEX_VALUE: 'cannot evaluate complex value',
     ERR_UNSUPPORTED_OP: 'unsupported operation',
+    ERR_UNSUPPORTED_ITER: 'unsupported iteration',
+    ERR_BAD_ITER_ARGS: 'invalid iteration arguments',
 }
 
 BIN_OPS = {
@@ -106,6 +110,37 @@ class Compiler(ast.NodeVisitor):
         end = len(self._ins) - 1
 
         self._ins[initial] = self._ins[initial].format(end)
+
+    def visit_For(self, node):
+        target = node.target
+        if not isinstance(target, ast.Name):
+            raise CompilerError(ERR_COMPLEX_ASSIGN, node)
+
+        if not isinstance(node.iter, ast.Call) or node.iter.func.id != 'range':
+            raise CompilerError(ERR_UNSUPPORTED_ITER, node)
+
+        argv = node.iter.args
+        argc = len(argv)
+        if argc == 1:
+            start, end, step = 0, self.as_value(argv[0]), 1
+        elif argc == 2:
+            start, end, step = *map(self.as_value, argv), 1
+        elif argc == 3:
+            start, end, step = map(self.as_value(argv))
+        else:
+            raise CompilerError(ERR_BAD_ITER_ARGS, node)
+
+        self._ins.append(f'set {target.id} {start}')
+
+        self._ins.append(f'jump {{}} greaterThanEq {target.id} {end}')
+        condition = len(self._ins) - 1
+
+        for subnode in node.body:
+            self.visit(subnode)
+
+        self._ins.append(f'op add {target.id} {target.id} {step}')
+        self._ins.append(f'jump {condition} always')
+        self._ins[condition] = self._ins[condition].format(len(self._ins))
 
     def as_value(self, node):
         if isinstance(node, ast.Constant):
