@@ -94,6 +94,19 @@ class Compiler(ast.NodeVisitor):
         self._ins[initial] = self._ins[initial].format(orelse + 1)
         self._ins[orelse] = self._ins[orelse].format(end)
 
+    def visit_While(self, node):
+        self._ins.append(f'jump {{}} always')
+        initial = len(self._ins) - 1
+
+        for subnode in node.body:
+            self.visit(subnode)
+
+        test = self.as_value(node.test)
+        self._ins.append(f'jump {initial + 1} notEqual {test} 0')
+        end = len(self._ins) - 1
+
+        self._ins[initial] = self._ins[initial].format(end)
+
     def as_value(self, node):
         if isinstance(node, ast.Constant):
             return node.value

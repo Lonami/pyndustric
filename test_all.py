@@ -83,3 +83,23 @@ def test_if_else():
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
+
+
+def test_while():
+    source = textwrap.dedent('''\
+        x = 10
+        while x:
+            x = x - 1
+        z = 1
+        ''').strip()
+
+    expected = textwrap.dedent('''\
+        set x 10
+        jump 3 always
+        op sub x x 1
+        jump 2 notEqual x 0
+        set z 1
+        ''').strip()
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
