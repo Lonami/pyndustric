@@ -187,16 +187,56 @@ class Compiler(ast.NodeVisitor):
         self._ins[condition] = self._ins[condition].format(len(self._ins))
 
     def visit_Expr(self, node):
-        if (not isinstance(node.value, ast.Call)
-                or not isinstance(node.value.func, ast.Attribute)
-                or not isinstance(node.value.func.value, ast.Name)):
+        call = node.value
+        if not isinstance(call, ast.Call):
             raise CompilerError(ERR_UNSUPPORTED_EXPR, node)
 
-        ns = node.value.func.value.id
+        # `print`, unlike the rest of syscalls, has no namespace
+        if isinstance(call.func, ast.Name) and call.func.id == 'print':
+            return self.emit_print_syscall(call)
+
+        if not isinstance(call.func, ast.Attribute) or not isinstance(call.func.value, ast.Name):
+            raise CompilerError(ERR_UNSUPPORTED_EXPR, node)
+
+        ns = call.func.value.id
         if ns == 'Screen':
-            self.emit_screen_syscall(node.value)
+            self.emit_screen_syscall(call)
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+
+    def emit_print_syscall(self, node: ast.Call):
+        if len(node.args) != 1:
+            raise CompilerError(ERR_BAD_SYSCALL_ARGS)
+
+        arg = node.args[0]
+        if isinstance(arg, ast.JoinedStr):
+            for value in arg.values:
+                if isinstance(value, ast.FormattedValue):
+                    if value.format_spec is not None:
+                        raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+                    val = self.as_value(value.value)
+                    self._ins.append(f'print {val}')
+                elif isinstance(value, ast.Constant):
+                    val = self.as_value(value)
+                    self._ins.append(f'print {val}')
+                else:
+                    raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+        else:
+            val = self.as_value(arg)
+            self._ins.append(f'print {val}')
+
+        flush = True
+        for kw in node.keywords:
+            if kw.arg == 'flush':
+                if not isinstance(kw.value, ast.Constant) or kw.value.value not in (False, True):
+                    raise CompilerError(ERR_BAD_SYSCALL_ARGS)
+                flush = kw.value.value
+            else:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS)
+
+        if flush:
+            self._ins.append('printflush message1')
 
     def emit_screen_syscall(self, node: ast.Call):
         method = node.func.attr

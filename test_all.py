@@ -289,6 +289,31 @@ def test_for():
     assert 'op add x x 3' in masm
 
 
+def test_print():
+    source = textwrap.dedent('''\
+        x = 1
+        y = 2
+        print("showing variables:")
+        print(f"x = {x}, y = ", flush=False)
+        print(y)
+        ''')
+
+    expected = as_masm('''\
+        set x 1
+        set y 2
+        print "showing variables:"
+        printflush message1
+        print "x = "
+        print x
+        print ", y = "
+        print y
+        printflush message1
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
 def test_draw():
     source = textwrap.dedent('''\
         from pyndustri import *
