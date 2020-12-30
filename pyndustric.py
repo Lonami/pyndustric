@@ -229,14 +229,19 @@ class Compiler(ast.NodeVisitor):
         flush = True
         for kw in node.keywords:
             if kw.arg == 'flush':
-                if not isinstance(kw.value, ast.Constant) or kw.value.value not in (False, True):
-                    raise CompilerError(ERR_BAD_SYSCALL_ARGS)
-                flush = kw.value.value
+                if isinstance(kw.value, ast.Constant) and kw.value.value in (False, True):
+                    flush = kw.value.value
+                elif isinstance(kw.value, ast.Name):
+                    flush = kw.value.id
+                else:
+                    raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
             else:
-                raise CompilerError(ERR_BAD_SYSCALL_ARGS)
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
-        if flush:
-            self._ins.append('printflush message1')
+        if isinstance(flush, str):
+            self._ins.append(f'printflush {flush}')
+        elif flush:
+            self._ins.append(f'printflush message1')
 
     def emit_screen_syscall(self, node: ast.Call):
         method = node.func.attr

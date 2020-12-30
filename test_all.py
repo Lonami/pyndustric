@@ -295,7 +295,7 @@ def test_print():
         y = 2
         print("showing variables:")
         print(f"x = {x}, y = ", flush=False)
-        print(y)
+        print(y, flush=message1)
         ''')
 
     expected = as_masm('''\
