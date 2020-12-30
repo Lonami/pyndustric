@@ -163,6 +163,33 @@ def test_if_else():
     assert masm == expected
 
 
+def test_if_elif_else():
+    source = textwrap.dedent('''\
+        x = 1
+        if x == 0:
+            y = 1
+        elif x == 1:
+            y = 2
+        else:
+            y = 3
+        ''')
+
+    # TODO detect jump-to-jump and rewrite to follow the chain
+    expected = as_masm('''\
+        set x 1
+        jump 7 equal x 0
+        jump 5 equal x 1
+        set y 3
+        jump 6 always
+        set y 2
+        jump 8 always
+        set y 1
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
 def test_while():
     source = textwrap.dedent('''\
         x = 10
