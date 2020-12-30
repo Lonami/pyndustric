@@ -53,6 +53,35 @@ def test_err_bad_iter_args():
         pyndustric.Compiler().compile('for x in range(1, 2, 3, 4): pass')
 
 
+def test_err_unsupported_import():
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_IMPORT):
+        pyndustric.Compiler().compile('from math import log')
+
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_IMPORT):
+        pyndustric.Compiler().compile('import pyndustri')
+
+
+def test_err_unsupported_expr():
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_EXPR):
+        pyndustric.Compiler().compile('log(10)')
+
+
+def test_err_unsupported_syscall():
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_SYSCALL):
+        pyndustric.Compiler().compile('Missing.method()')
+
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_SYSCALL):
+        pyndustric.Compiler().compile('Screen.missing()')
+
+
+def test_err_bad_syscall_args():
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_SYSCALL_ARGS):
+        pyndustric.Compiler().compile('Screen.clear(1)')
+
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_SYSCALL_ARGS):
+        pyndustric.Compiler().compile('Screen.clear(1, 2, 3, 4)')
+
+
 def test_assignments():
     source = textwrap.dedent('''\
         x = 1
@@ -146,6 +175,39 @@ def test_for():
         op add x x 1
         jump 1 always
         set z 1
+        ''').strip()
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
+def test_draw():
+    source = textwrap.dedent('''\
+        from pyndustri import *
+
+        Screen.clear(255, 0, 0)
+        Screen.color(0, 255, 255)
+        Screen.stroke(2)
+        Screen.line(0, 0, 80, 80)
+        Screen.rect(0, 0, 20, 20)
+        Screen.hollow_rect(0, 0, 40, 40)
+        Screen.poly(60, 60, 10, 3)
+        Screen.hollow_poly(60, 60, 20, 5)
+        Screen.triangle(70, 80, 80, 80, 80, 70)
+        Screen.flush()
+        ''').strip()
+
+    expected = textwrap.dedent('''\
+        draw clear 255 0 0
+        draw color 0 255 255 255
+        draw stroke 2
+        draw line 0 0 80 80
+        draw rect 0 0 20 20
+        draw lineRect 0 0 40 40
+        draw poly 60 60 3 10 0
+        draw linePoly 60 60 5 20 0
+        draw triangle 70 80 80 80 80 70
+        drawflush display1
         ''').strip()
 
     masm = pyndustric.Compiler().compile(source)

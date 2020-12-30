@@ -11,6 +11,10 @@ ERR_COMPLEX_VALUE = 'E003'
 ERR_UNSUPPORTED_OP = 'E004'
 ERR_UNSUPPORTED_ITER = 'E005'
 ERR_BAD_ITER_ARGS = 'E006'
+ERR_UNSUPPORTED_IMPORT = 'E007'
+ERR_UNSUPPORTED_EXPR = 'E008'
+ERR_UNSUPPORTED_SYSCALL = 'E009'
+ERR_BAD_SYSCALL_ARGS = 'E010'
 
 ERROR_DESCRIPTIONS = {
     ERR_MULTI_ASSIGN: 'can only assign to 1 target',
@@ -19,6 +23,10 @@ ERROR_DESCRIPTIONS = {
     ERR_UNSUPPORTED_OP: 'unsupported operation',
     ERR_UNSUPPORTED_ITER: 'unsupported iteration',
     ERR_BAD_ITER_ARGS: 'invalid iteration arguments',
+    ERR_UNSUPPORTED_IMPORT: 'unsupported import',
+    ERR_UNSUPPORTED_EXPR: 'unsupported standalone expression',
+    ERR_UNSUPPORTED_SYSCALL: 'unsupported system call',
+    ERR_BAD_SYSCALL_ARGS: 'invalid syscall arguments',
 }
 
 BIN_OPS = {
@@ -59,6 +67,13 @@ class Compiler(ast.NodeVisitor):
         if DEBUG:
             print(ast.dump(node), '\n')
         super().visit(node)
+
+    def visit_Import(self, node):
+        raise CompilerError(ERR_UNSUPPORTED_IMPORT, node)
+
+    def visit_ImportFrom(self, node):
+        if node.module != 'pyndustri' or len(node.names) != 1 or node.names[0].name != '*':
+            raise CompilerError(ERR_UNSUPPORTED_IMPORT, node)
 
     def visit_Assign(self, node: ast.Assign):
         if len(node.targets) != 1:
@@ -141,6 +156,107 @@ class Compiler(ast.NodeVisitor):
         self._ins.append(f'op add {target.id} {target.id} {step}')
         self._ins.append(f'jump {condition} always')
         self._ins[condition] = self._ins[condition].format(len(self._ins))
+
+    def visit_Expr(self, node):
+        if (not isinstance(node.value, ast.Call)
+                or not isinstance(node.value.func, ast.Attribute)
+                or not isinstance(node.value.func.value, ast.Name)):
+            raise CompilerError(ERR_UNSUPPORTED_EXPR, node)
+
+        ns = node.value.func.value.id
+        if ns == 'Screen':
+            self.emit_screen_syscall(node.value)
+        else:
+            raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+
+    def emit_screen_syscall(self, node: ast.Call):
+        method = node.func.attr
+        if method == 'clear':
+            if len(node.args) != 3:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            r, g, b = map(self.as_value, node.args)
+            self._ins.append(f'draw clear {r} {g} {b}')
+
+        elif method == 'color':
+            if len(node.args) == 3:
+                r, g, b, a = *map(self.as_value, node.args), 255
+            elif len(node.args) == 4:
+                r, g, b, a = map(self.as_value, node.args)
+            else:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self._ins.append(f'draw color {r} {g} {b} {a}')
+
+        elif method == 'stroke':
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            width = self.as_value(node.args[0])
+            self._ins.append(f'draw stroke {width}')
+
+        elif method == 'line':
+            if len(node.args) != 4:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            x0, y0, x1, y1 = map(self.as_value, node.args)
+            self._ins.append(f'draw line {x0} {y0} {x1} {y1}')
+
+        elif method == 'rect':
+            if len(node.args) != 4:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            x, y, width, height = map(self.as_value, node.args)
+            self._ins.append(f'draw rect {x} {y} {width} {height}')
+
+        elif method == 'hollow_rect':
+            if len(node.args) != 4:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            x, y, width, height = map(self.as_value, node.args)
+            self._ins.append(f'draw lineRect {x} {y} {width} {height}')
+
+        elif method == 'poly':
+            if len(node.args) == 4:
+                x, y, radius, sides, rotation = *map(self.as_value, node.args), 0
+            elif len(node.args) == 5:
+                x, y, radius, sides, rotation = map(self.as_value, node.args)
+            else:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self._ins.append(f'draw poly {x} {y} {sides} {radius} {rotation}')
+
+        elif method == 'hollow_poly':
+            if len(node.args) == 4:
+                x, y, radius, sides, rotation = *map(self.as_value, node.args), 0
+            elif len(node.args) == 5:
+                x, y, radius, sides, rotation = map(self.as_value, node.args)
+            else:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self._ins.append(f'draw linePoly {x} {y} {sides} {radius} {rotation}')
+
+        elif method == 'triangle':
+            if len(node.args) != 6:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            x0, y0, x1, y1, x2, y2 = map(self.as_value, node.args)
+            self._ins.append(f'draw triangle {x0} {y0} {x1} {y1} {x2} {y2}')
+
+        # elif method == 'image':
+        #     pass
+
+        elif method == 'flush':
+            if len(node.args) == 0:
+                self._ins.append(f'drawflush display1')
+            elif len(node.args) == 1:
+                value = self.as_value(node.args[0])
+                self._ins.append(f'drawflush {value}')
+            else:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+        else:
+            raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
     def as_value(self, node):
         if isinstance(node, ast.Constant):
