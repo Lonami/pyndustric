@@ -45,7 +45,6 @@ class CompilerError(ValueError):
 
 class Compiler(ast.NodeVisitor):
     def __init__(self):
-        self._in_function = None
         self._ins = []
 
     def compile(self, code):
@@ -77,6 +76,23 @@ class Compiler(ast.NodeVisitor):
         else:
             val = self.as_value(value)
             self._ins.append(f'set {target.id} {val}')
+
+    def visit_If(self, node):
+        test = self.as_value(node.test)
+        self._ins.append(f'jump {{}} notEqual {test} 0')
+        initial = len(self._ins) - 1
+
+        for subnode in node.orelse:
+            self.visit(subnode)
+        self._ins.append(f'jump {{}} always')
+        orelse = len(self._ins) - 1
+
+        for subnode in node.body:
+            self.visit(subnode)
+        end = len(self._ins)
+
+        self._ins[initial] = self._ins[initial].format(orelse + 1)
+        self._ins[orelse] = self._ins[orelse].format(end)
 
     def as_value(self, node):
         if isinstance(node, ast.Constant):

@@ -39,3 +39,47 @@ def test_assignments():
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
+
+
+def test_if():
+    source = textwrap.dedent('''\
+        x = 1
+        if x:
+            y = 1
+        z = 1
+        ''').strip()
+
+    # TODO negate initial jmp condition with no else
+    expected = textwrap.dedent('''\
+        set x 1
+        jump 3 notEqual x 0
+        jump 4 always
+        set y 1
+        set z 1
+        ''').strip()
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
+def test_if_else():
+    source = textwrap.dedent('''\
+        x = 1
+        if x:
+            y = 1
+        else:
+            y = 0
+        z = 1
+        ''').strip()
+
+    expected = textwrap.dedent('''\
+        set x 1
+        jump 4 notEqual x 0
+        set y 0
+        jump 5 always
+        set y 1
+        set z 1
+        ''').strip()
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
