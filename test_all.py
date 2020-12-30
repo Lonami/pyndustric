@@ -3,6 +3,20 @@ import pytest
 import textwrap
 
 
+def test_all_err_have_desc_and_tests():
+    error_names = [name for name in dir(pyndustric) if name.startswith('ERR_')]
+    error_values = {getattr(pyndustric, name) for name in error_names}
+
+    assert len(error_values) == len(error_names), 'some error constants have duplicate values'
+    assert len(error_values) == len(pyndustric.ERROR_DESCRIPTIONS), 'not all errors are documented'
+
+    with open(__file__, encoding='utf-8') as fd:
+        source = fd.read()
+
+    for name in error_names:
+        assert name in source, 'error is missing a test'
+
+
 def test_err_multi_assign():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_MULTI_ASSIGN):
         pyndustric.Compiler().compile('a = b = 1')
