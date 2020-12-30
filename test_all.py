@@ -41,6 +41,9 @@ def test_err_complex_value():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_VALUE):
         pyndustric.Compiler().compile('a += 1 + 2')
 
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_VALUE):
+        pyndustric.Compiler().compile('a = 1 + 2j')
+
 
 def test_err_unsupported_op():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_OP):
@@ -101,6 +104,25 @@ def test_assignments():
     expected = as_masm('''\
         set x 1
         op add z x 2
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
+def test_types():
+    source = textwrap.dedent('''\
+        x = True
+        y = 1
+        z = 0.1
+        a = "string"
+        ''')
+
+    expected = as_masm('''\
+        set x true
+        set y 1
+        set z 0.1
+        set a "string"
         ''')
 
     masm = pyndustric.Compiler().compile(source)

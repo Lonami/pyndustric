@@ -289,7 +289,14 @@ class Compiler(ast.NodeVisitor):
 
     def as_value(self, node):
         if isinstance(node, ast.Constant):
-            return node.value
+            if isinstance(node.value, bool):
+                return ('false', 'true')[node.value]
+            elif isinstance(node.value, (int, float)):
+                return str(node.value)
+            elif isinstance(node.value, str):
+                return '"' + ''.join(c for c in node.value if c >= ' ' and c != '"') + '"'
+            else:
+                raise CompilerError(ERR_COMPLEX_VALUE, node)
         elif isinstance(node, ast.Name):
             assert isinstance(node.ctx, ast.Load)
             return node.id
