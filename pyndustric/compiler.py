@@ -1,89 +1,19 @@
 import ast
-import sys
-import time
 
 from dataclasses import dataclass
+from .constants import *
 
-__version__ = '0.1'
-DEBUG = False
-
-# https://github.com/Anuken/Mindustry/blob/ab19e6f/core/src/mindustry/logic/LExecutor.java#L28
-MAX_INSTRUCTIONS = 1000
-
-ERR_MULTI_ASSIGN = 'E001'
-ERR_COMPLEX_ASSIGN = 'E002'
-ERR_COMPLEX_VALUE = 'E003'
-ERR_UNSUPPORTED_OP = 'E004'
-ERR_UNSUPPORTED_ITER = 'E005'
-ERR_BAD_ITER_ARGS = 'E006'
-ERR_UNSUPPORTED_IMPORT = 'E007'
-ERR_UNSUPPORTED_EXPR = 'E008'
-ERR_UNSUPPORTED_SYSCALL = 'E009'
-ERR_BAD_SYSCALL_ARGS = 'E010'
-ERR_NESTED_DEF = 'E011'
-ERR_INVALID_DEF = 'E012'
-ERR_REDEF = 'E013'
-ERR_NO_DEF = 'E014'
-ERR_ARGC_MISMATCH = 'E015'
-ERR_TOO_LONG = 'E016'
-
-ERROR_DESCRIPTIONS = {
-    ERR_MULTI_ASSIGN: 'can only assign to 1 target',
-    ERR_COMPLEX_ASSIGN: 'cannot perform complex assignment',
-    ERR_COMPLEX_VALUE: 'cannot evaluate complex value',
-    ERR_UNSUPPORTED_OP: 'unsupported operation',
-    ERR_UNSUPPORTED_ITER: 'unsupported iteration',
-    ERR_BAD_ITER_ARGS: 'invalid iteration arguments',
-    ERR_UNSUPPORTED_IMPORT: 'unsupported import',
-    ERR_UNSUPPORTED_EXPR: 'unsupported standalone expression',
-    ERR_UNSUPPORTED_SYSCALL: 'unsupported system call',
-    ERR_BAD_SYSCALL_ARGS: 'invalid syscall arguments',
-    ERR_NESTED_DEF: 'nested function definitions are not allowed',
-    ERR_INVALID_DEF: 'invalid function definition',
-    ERR_REDEF: 'cannot define the same function name twice',
-    ERR_NO_DEF: 'function has not been defined',
-    ERR_ARGC_MISMATCH: 'different number of arguments used in function call from function definition',
-    ERR_TOO_LONG: 'the program is too long to fit in a logic processor',
-}
-
-BIN_CMP = {
-    ast.Eq: 'equal',
-    ast.NotEq: 'notEqual',
-    ast.And: 'land',
-    ast.Lt: 'lessThan',
-    ast.LtE: 'lessThanEq',
-    ast.Gt: 'greaterThan',
-    ast.GtE: 'greaterThanEq',
-}
-
-BIN_OPS = {
-    ast.Add: 'add',
-    ast.Sub: 'sub',
-    ast.Mult: 'mul',
-    ast.Div: 'div',
-    ast.FloorDiv: 'idiv',
-    ast.Mod: 'mod',
-    ast.Pow: 'pow',
-    ast.LShift: 'shl',
-    ast.RShift: 'shr',
-    ast.BitOr: 'or',
-    ast.BitAnd: 'and',
-    ast.BitXor: 'xor',
-    **BIN_CMP,
-}
-
-REG_STACK = '__pyc_sp'
-REG_RET = '__pyc_ret'
-REG_RET_COUNTER_PREFIX = '__pyc_rc_'
 
 @dataclass
 class Function:
     start: int
     argc: int
 
+
 class CompilerError(ValueError):
     def __init__(self, code, node: ast.AST):
         super().__init__(f'[{code}/{node.lineno}:{node.col_offset}] {ERROR_DESCRIPTIONS[code]}')
+
 
 class Compiler(ast.NodeVisitor):
     def __init__(self):
@@ -98,8 +28,6 @@ class Compiler(ast.NodeVisitor):
         return self.generate_masm()
 
     def visit(self, node):
-        if DEBUG:
-            print(ast.dump(node), '\n')
         super().visit(node)
 
     def visit_Import(self, node):
@@ -459,22 +387,3 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_TOO_LONG, ast.Module(lineno=0, col_offset=0))
 
         return '\n'.join(self._ins) + '\nend\n'
-
-def main():
-    for file in sys.argv[1:]:
-        print(f'# reading {file}...', file=sys.stderr)
-        if file == '-':
-            source = sys.stdin.read()
-        else:
-            with open(file, encoding='utf-8') as fd:
-                source = fd.read()
-
-        print(f'# compiling {file}...', file=sys.stderr)
-        start = time.time()
-        masm = Compiler().compile(source)
-        took = time.time() - start
-        print(masm)
-        print(f'# compiled {file} with pyndustric {__version__} in {took:.2f}s', file=sys.stderr)
-
-if __name__ == '__main__':
-    main()
