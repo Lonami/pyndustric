@@ -80,6 +80,21 @@ else:
     print('7 is not prime???')
 ```
 
+## Documentation
+
+The language is Python, so all simple programs you can imagine are possible. Beyond that, the
+supported "system calls" are documented in the [`pyndustri.pyi`] file.
+
+To learn about the possible compiler errors, refer to the `ERR_` and `ERROR_DESCRIPTIONS`
+constants in the [`pyndustric.py`] file.
+
+To compile your program, run [`pyndustric.py`] and pass the files to compile as input arguments.
+The compiled program will be printed to standard output. `-` can be used as a file to mean stdin:
+
+```sh
+$ python pyndustric.py yourprogram.py
+```
+
 ## Known limitations
 
 Beware of very long programs, [there is a current limitation of 1000 instructions][limit-k].
@@ -87,3 +102,5 @@ Beware of very long programs, [there is a current limitation of 1000 instruction
 [f-string]: https://docs.python.org/3/reference/lexical_analysis.html#f-strings
 [ip-not-reset]: https://github.com/Anuken/Mindustry/issues/4189
 [limit-k]: https://github.com/Anuken/Mindustry/blob/ab19e6ffbd7a64117cd70d3e3b88806c13822c94/core/src/mindustry/logic/LExecutor.java#L28
+[`pyndustri.pyi`]: pyndustri.pyi
+[`pyndustric.py`]: pyndustric.py
