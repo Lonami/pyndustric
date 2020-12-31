@@ -274,8 +274,11 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_UNSUPPORTED_EXPR, node)
 
         # `print`, unlike the rest of syscalls, has no namespace
-        if isinstance(call.func, ast.Name) and call.func.id == 'print':
-            return self.emit_print_syscall(call)
+        if isinstance(call.func, ast.Name):
+            if call.func.id == 'print':
+                return self.emit_print_syscall(call)
+            else:
+                return self.as_value(call)
 
         if not isinstance(call.func, ast.Attribute) or not isinstance(call.func.value, ast.Name):
             raise CompilerError(ERR_UNSUPPORTED_EXPR, node)

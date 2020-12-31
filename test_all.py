@@ -76,7 +76,7 @@ def test_err_unsupported_import():
 
 def test_err_unsupported_expr():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_EXPR):
-        pyndustric.Compiler().compile('log(10)')
+        pyndustric.Compiler().compile('1 + (2 + 3)')
 
 
 def test_err_unsupported_syscall():
@@ -369,6 +369,31 @@ def test_def():
         print ", 15 small? "
         print b
         printflush message1
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
+def test_def_sideeffects():
+    source = textwrap.dedent('''\
+        def foo():
+            print('bar')
+
+        foo()
+        ''')
+
+    expected = as_masm('''\
+        jump 8 always
+        print "bar"
+        printflush message1
+        op sub __pyc_sp __pyc_sp 1
+        read __pyc_tmp cell1 __pyc_sp
+        op add __pyc_tmp __pyc_tmp 2
+        set @counter __pyc_tmp
+        write @counter cell1 __pyc_sp
+        op add __pyc_sp __pyc_sp 1
+        jump 2 always
         ''')
 
     masm = pyndustric.Compiler().compile(source)
