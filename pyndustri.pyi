@@ -226,6 +226,21 @@ class Sensor:
         """Is this link enabled?"""
 
 
+class Control:
+    """
+    Lets you control a given link.
+    """
+    @staticmethod
+    def enabled(link: Link, enabled: bool):
+        """Sets the link enabled or disabled, based on the given value."""
+
+    def shoot(link: Link, x: int, y: int, enabled: bool = True):
+        """Sets the link to shoot or not, and if shooting, the position."""
+
+    def ceasefire(link: Link):
+        """Shorthand to stop firing."""
+
+
 class Screen:
     """
     Method interface to the `draw` and `drawflush` command.

@@ -254,6 +254,8 @@ class Compiler(ast.NodeVisitor):
         ns = call.func.value.id
         if ns == 'Screen':
             self.emit_screen_syscall(call)
+        elif ns == 'Control':
+            self.emit_control_syscall(call)
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
@@ -382,6 +384,32 @@ class Compiler(ast.NodeVisitor):
             else:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
+        else:
+            raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+
+    def emit_control_syscall(self, node: ast.Call):
+        method = node.func.attr
+        if method == 'enabled':
+            if len(node.args) != 2:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            link, enabled = map(self.as_value, node.args)
+            self._ins.append(f'control enabled {link} {enabled}')
+        elif method == 'shoot':
+            if len(node.args) == 3:
+                link, x, y, enabled = *map(self.as_value, node.args), 1
+            elif len(node.args) == 4:
+                link, x, y, enabled = map(self.as_value, node.args)
+            else:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self._ins.append(f'control shoot {link} {x} {y} {enabled}')
+        elif method == 'ceasefire':
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            link = self.as_value(node.args[0])
+            self._ins.append(f'control shoot {link} 0 0 0')
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 

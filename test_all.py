@@ -540,3 +540,20 @@ def test_draw():
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
+
+
+def test_control():
+    source = textwrap.dedent('''\
+        Control.enabled(reactor, False)
+        Control.shoot(duo1, 10, 20)
+        Control.ceasefire(scatter1)
+        ''')
+
+    expected = as_masm('''\
+        control enabled reactor false
+        control shoot duo1 10 20 1
+        control shoot scatter1 0 0 0
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
