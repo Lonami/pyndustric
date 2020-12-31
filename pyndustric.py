@@ -2,6 +2,8 @@ import ast
 import sys
 import time
 
+from dataclasses import dataclass
+
 __version__ = '0.1'
 DEBUG = False
 
@@ -15,6 +17,11 @@ ERR_UNSUPPORTED_IMPORT = 'E007'
 ERR_UNSUPPORTED_EXPR = 'E008'
 ERR_UNSUPPORTED_SYSCALL = 'E009'
 ERR_BAD_SYSCALL_ARGS = 'E010'
+ERR_NESTED_DEF = 'E011'
+ERR_INVALID_DEF = 'E012'
+ERR_REDEF = 'E013'
+ERR_NO_DEF = 'E014'
+ERR_ARGC_MISMATCH = 'E015'
 
 ERROR_DESCRIPTIONS = {
     ERR_MULTI_ASSIGN: 'can only assign to 1 target',
@@ -27,6 +34,11 @@ ERROR_DESCRIPTIONS = {
     ERR_UNSUPPORTED_EXPR: 'unsupported standalone expression',
     ERR_UNSUPPORTED_SYSCALL: 'unsupported system call',
     ERR_BAD_SYSCALL_ARGS: 'invalid syscall arguments',
+    ERR_NESTED_DEF: 'nested function definitions are not allowed',
+    ERR_INVALID_DEF: 'invalid function definition',
+    ERR_REDEF: 'cannot define the same function name twice',
+    ERR_NO_DEF: 'function has not been defined',
+    ERR_ARGC_MISMATCH: 'different number of arguments used in function call from function definition',
 }
 
 BIN_CMP = {
@@ -55,13 +67,26 @@ BIN_OPS = {
     **BIN_CMP,
 }
 
+REG_STACK = '__pyc_sp'
+REG_RET = '__pyc_ret'
+REG_TMP = '__pyc_tmp'
+
+@dataclass
+class Function:
+    start: int
+    argc: int
+
 class CompilerError(ValueError):
     def __init__(self, code, node: ast.AST):
         super().__init__(f'[{code}/{node.lineno}:{node.col_offset}] {ERROR_DESCRIPTIONS[code]}')
 
 class Compiler(ast.NodeVisitor):
     def __init__(self):
-        self._ins = []
+        self._ins = [
+            f'set {REG_STACK} 0',
+        ]
+        self._in_def = None
+        self._functions = {}
 
     def compile(self, code):
         self.visit(ast.parse(code))
@@ -185,6 +210,63 @@ class Compiler(ast.NodeVisitor):
         self._ins.append(f'op add {target.id} {target.id} {step}')
         self._ins.append(f'jump {condition} always')
         self._ins[condition] = self._ins[condition].format(len(self._ins))
+
+    def visit_FunctionDef(self, node):
+        # TODO forbid recursion (or implement it by storing and restoring everything from stack)
+        # TODO local variable namespace per-function
+        if self._in_def is not None:
+            raise CompilerError(ERR_NESTED_DEF, node)
+
+        if node.name in self._functions:
+            raise CompilerError(ERR_REDEF, node)
+
+        self._in_def = node.name
+
+        args = node.args
+        if any((
+                args.posonlyargs,
+                args.vararg,
+                args.kwonlyargs,
+                args.kw_defaults,
+                args.kwarg,
+                args.defaults,
+        )):
+            raise CompilerError(ERR_INVALID_DEF, node)
+
+        # TODO it's better to put functions at the end and not have to skip them as code, but jumps need fixing
+        self._ins.append('jump {} always')
+
+        prologue = len(self._ins)
+        self._functions[node.name] = Function(start=prologue, argc=len(args.args))
+
+        for arg in args.args:
+            self._ins.append(f'op sub {REG_STACK} {REG_STACK} 1')
+            self._ins.append(f'read {arg.arg} cell1 {REG_STACK}')
+
+        for subnode in node.body:
+            self.visit(subnode)
+
+        epilogue = len(self._ins)
+        # TODO better way to patch this (ins should be concrete types, not immutable strings)
+        for i in range(prologue, epilogue):
+            if '{epilogue}' in self._ins[i]:
+                self._ins[i] = self._ins[i].format(epilogue=epilogue)
+
+        self._ins.append(f'op sub {REG_STACK} {REG_STACK} 1')
+        self._ins.append(f'read {REG_TMP} cell1 {REG_STACK}')
+        # @counter is next index after reading it (so no need to skip instruction that reads it)
+        # 1 to skip @counter stack increment, 1 to skip jump, 2 instructions per argument push
+        self._ins.append(f'op add {REG_TMP} {REG_TMP} {2 + len(args.args) * 2}')
+        self._ins.append(f'set @counter {REG_TMP}')
+
+        end = len(self._ins)
+        self._ins[prologue - 1] = self._ins[prologue - 1].format(end)
+        self._in_def = None
+
+    def visit_Return(self, node):
+        val = self.as_value(node.value)
+        self._ins.append(f'set {REG_RET} {val}')
+        self._ins.append('jump {epilogue} always')
 
     def visit_Expr(self, node):
         call = node.value
@@ -345,6 +427,25 @@ class Compiler(ast.NodeVisitor):
         elif isinstance(node, ast.Name):
             assert isinstance(node.ctx, ast.Load)
             return node.id
+        elif isinstance(node, ast.Call):
+            fn = self._functions.get(node.func.id)
+            if fn is None:
+                raise CompilerError(ERR_NO_DEF, node)
+
+            if len(node.args) != fn.argc:
+                raise CompilerError(ERR_ARGC_MISMATCH, node)
+
+            # TODO test nested call value `foo(foo(1))``
+            self._ins.append(f'write @counter cell1 {REG_STACK}')
+            self._ins.append(f'op add {REG_STACK} {REG_STACK} 1')
+
+            for arg in node.args:
+                val = self.as_value(arg)
+                self._ins.append(f'write {val} cell1 {REG_STACK}')
+                self._ins.append(f'op add {REG_STACK} {REG_STACK} 1')
+
+            self._ins.append(f'jump {fn.start} always')
+            return REG_RET
         else:
             raise CompilerError(ERR_COMPLEX_VALUE, node)
 
