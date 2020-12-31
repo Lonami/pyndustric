@@ -80,5 +80,10 @@ else:
     print('7 is not prime???')
 ```
 
+## Known limitations
+
+Beware of very long programs, [there is a current limitation of 1000 instructions][limit-k].
+
 [f-string]: https://docs.python.org/3/reference/lexical_analysis.html#f-strings
 [ip-not-reset]: https://github.com/Anuken/Mindustry/issues/4189
+[limit-k]: https://github.com/Anuken/Mindustry/blob/ab19e6ffbd7a64117cd70d3e3b88806c13822c94/core/src/mindustry/logic/LExecutor.java#L28

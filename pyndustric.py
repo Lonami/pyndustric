@@ -7,6 +7,9 @@ from dataclasses import dataclass
 __version__ = '0.1'
 DEBUG = False
 
+# https://github.com/Anuken/Mindustry/blob/ab19e6f/core/src/mindustry/logic/LExecutor.java#L28
+MAX_INSTRUCTIONS = 1000
+
 ERR_MULTI_ASSIGN = 'E001'
 ERR_COMPLEX_ASSIGN = 'E002'
 ERR_COMPLEX_VALUE = 'E003'
@@ -22,6 +25,7 @@ ERR_INVALID_DEF = 'E012'
 ERR_REDEF = 'E013'
 ERR_NO_DEF = 'E014'
 ERR_ARGC_MISMATCH = 'E015'
+ERR_TOO_LONG = 'E016'
 
 ERROR_DESCRIPTIONS = {
     ERR_MULTI_ASSIGN: 'can only assign to 1 target',
@@ -39,6 +43,7 @@ ERROR_DESCRIPTIONS = {
     ERR_REDEF: 'cannot define the same function name twice',
     ERR_NO_DEF: 'function has not been defined',
     ERR_ARGC_MISMATCH: 'different number of arguments used in function call from function definition',
+    ERR_TOO_LONG: 'the program is too long to fit in a logic processor',
 }
 
 BIN_CMP = {
@@ -450,6 +455,9 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_COMPLEX_VALUE, node)
 
     def generate_masm(self):
+        if len(self._ins) + 1 > MAX_INSTRUCTIONS:
+            raise CompilerError(ERR_TOO_LONG, ast.Module(lineno=0, col_offset=0))
+
         return '\n'.join(self._ins) + '\nend\n'
 
 def main():

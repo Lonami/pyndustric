@@ -132,6 +132,11 @@ def test_err_argc_mismatch():
         pyndustric.Compiler().compile('def foo(n): pass\nx = foo(1, 2)')
 
 
+def test_err_too_long():
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_TOO_LONG):
+        pyndustric.Compiler().compile('x = 1\n' * (1 + pyndustric.MAX_INSTRUCTIONS))
+
+
 def test_assignments():
     source = textwrap.dedent('''\
         x = 1
