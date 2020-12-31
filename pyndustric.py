@@ -217,7 +217,7 @@ class Compiler(ast.NodeVisitor):
         if self._in_def is not None:
             raise CompilerError(ERR_NESTED_DEF, node)
 
-        if node.name in self._functions:
+        if node.name in self._functions or node.name == 'print':
             raise CompilerError(ERR_REDEF, node)
 
         self._in_def = node.name

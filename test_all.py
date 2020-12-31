@@ -115,6 +115,9 @@ def test_err_redef():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_REDEF):
         pyndustric.Compiler().compile('def foo(): pass\ndef foo(): pass')
 
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_REDEF):
+        pyndustric.Compiler().compile('def print(): pass')
+
 
 def test_err_no_def():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_NO_DEF):
