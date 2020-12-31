@@ -54,6 +54,19 @@ class Compiler(ast.NodeVisitor):
             left = self.as_value(value.left)
             right = self.as_value(value.right)
             self._ins.append(f'op {op} {target.id} {left} {right}')
+        elif isinstance(value, ast.Call) \
+                and isinstance(value.func, ast.Attribute) \
+                and value.func.value.id == 'Sensor':
+            if len(value.args) != 1:
+                raise CompilerError(ERR_ARGC_MISMATCH, node)
+
+            arg = value.args[0].id
+
+            attr = RES_MAP.get(value.func.attr)
+            if attr is None:
+                raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+
+            self._ins.append(f'sensor {target.id} {arg} {attr}')
         else:
             val = self.as_value(value)
             self._ins.append(f'set {target.id} {val}')

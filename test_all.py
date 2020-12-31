@@ -494,6 +494,19 @@ def test_env():
     assert masm == expected
 
 
+def test_sensor():
+    source = textwrap.dedent('''\
+        copper = Sensor.copper(container1)
+        ''')
+
+    expected = as_masm('''\
+        sensor copper container1 @copper
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
 def test_draw():
     source = textwrap.dedent('''\
         from pyndustri import *
