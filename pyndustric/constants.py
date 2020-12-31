@@ -62,9 +62,21 @@ BIN_OPS = {
     **BIN_CMP,
 }
 
+ENV_TO_VAR = {
+    'this': '@this',
+    'x': '@thisx',
+    'y': '@thisy',
+    'counter': '@counter',
+    'link_count': '@links',
+    'time': '@time',
+    'width': '@mapw',
+    'height': '@maph',
+}
+
 REG_STACK = '__pyc_sp'
 REG_RET = '__pyc_ret'
 REG_RET_COUNTER_PREFIX = '__pyc_rc_'
+REG_IT_FMT = '__pyc_it_{}_{}'
 
 # https://github.com/Anuken/Mindustry/blob/ab19e6f/core/src/mindustry/logic/LExecutor.java#L28
 MAX_INSTRUCTIONS = 1000

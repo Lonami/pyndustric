@@ -118,29 +118,42 @@ class Compiler(ast.NodeVisitor):
         if not isinstance(target, ast.Name):
             raise CompilerError(ERR_COMPLEX_ASSIGN, node)
 
-        if not isinstance(node.iter, ast.Call) or node.iter.func.id != 'range':
+        call = node.iter
+        if not isinstance(call, ast.Call):
             raise CompilerError(ERR_UNSUPPORTED_ITER, node)
 
-        argv = node.iter.args
-        argc = len(argv)
-        if argc == 1:
-            start, end, step = 0, self.as_value(argv[0]), 1
-        elif argc == 2:
-            start, end, step = *map(self.as_value, argv), 1
-        elif argc == 3:
-            start, end, step = map(self.as_value, argv)
+        inject = []
+
+        if isinstance(call.func, ast.Attribute) \
+                and call.func.value.id == 'Env' and call.func.attr == 'links':
+            it = REG_IT_FMT.format(call.lineno, call.col_offset)
+            start, end, step = 0, '@links', 1
+            inject.append(f'getlink {target.id} {it}')
+        elif isinstance(call.func, ast.Name) and call.func.id == 'range':
+            it = target.id
+            argv = call.args
+            argc = len(argv)
+            if argc == 1:
+                start, end, step = 0, self.as_value(argv[0]), 1
+            elif argc == 2:
+                start, end, step = *map(self.as_value, argv), 1
+            elif argc == 3:
+                start, end, step = map(self.as_value, argv)
+            else:
+                raise CompilerError(ERR_BAD_ITER_ARGS, node)
         else:
-            raise CompilerError(ERR_BAD_ITER_ARGS, node)
+            raise CompilerError(ERR_UNSUPPORTED_ITER, node)
 
-        self._ins.append(f'set {target.id} {start}')
+        self._ins.append(f'set {it} {start}')
 
-        self._ins.append(f'jump {{}} greaterThanEq {target.id} {end}')
+        self._ins.append(f'jump {{}} greaterThanEq {it} {end}')
         condition = len(self._ins) - 1
 
+        self._ins.extend(inject)
         for subnode in node.body:
             self.visit(subnode)
 
-        self._ins.append(f'op add {target.id} {target.id} {step}')
+        self._ins.append(f'op add {it} {it} {step}')
         self._ins.append(f'jump {condition} always')
         self._ins[condition] = self._ins[condition].format(len(self._ins))
 
@@ -362,6 +375,12 @@ class Compiler(ast.NodeVisitor):
             assert isinstance(node.ctx, ast.Load)
             return node.id
         elif isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Attribute):
+                if node.func.value.id == 'Env':
+                    return self.env_as_value(node.func)
+                else:
+                    raise CompilerError(ERR_COMPLEX_VALUE, node)
+
             fn = self._functions.get(node.func.id)
             if fn is None:
                 raise CompilerError(ERR_NO_DEF, node)
@@ -381,6 +400,12 @@ class Compiler(ast.NodeVisitor):
             return REG_RET
         else:
             raise CompilerError(ERR_COMPLEX_VALUE, node)
+
+    def env_as_value(self, node):
+        var = ENV_TO_VAR.get(node.attr)
+        if var is None:
+            raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+        return var
 
     def generate_masm(self):
         if len(self._ins) + 1 > MAX_INSTRUCTIONS:

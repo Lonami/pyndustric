@@ -459,6 +459,41 @@ def test_print():
     assert masm == expected
 
 
+def test_env():
+    source = textwrap.dedent('''\
+        this = Env.this()
+        x = Env.x()
+        y = Env.y()
+        pc = Env.counter()
+        links = Env.link_count()
+        time = Env.time()
+        width = Env.width()
+        height = Env.height()
+
+        for link in Env.links():
+            pass
+        ''')
+
+    expected = as_masm('''\
+        set this @this
+        set x @thisx
+        set y @thisy
+        set pc @counter
+        set links @links
+        set time @time
+        set width @mapw
+        set height @maph
+        set __pyc_it_10_12 0
+        jump 14 greaterThanEq __pyc_it_10_12 @links
+        getlink link __pyc_it_10_12
+        op add __pyc_it_10_12 __pyc_it_10_12 1
+        jump 10 always
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
 def test_draw():
     source = textwrap.dedent('''\
         from pyndustri import *

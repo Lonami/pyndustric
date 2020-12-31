@@ -1,9 +1,57 @@
 from typing import Union
 
-class Resource:
-    pass
+
+class Env:
+    """
+    Access to special environmental variables.
+    """
+
+    @staticmethod
+    def this():
+        """Return the `Building` object representing this logic processor."""
+
+    @staticmethod
+    def x():
+        """Return the `x` coordinate where `this` is located."""
+
+    @staticmethod
+    def y():
+        """Return the `y` coordinate where `this` is located."""
+
+    @staticmethod
+    def counter():
+        """
+        Return the Program Counter (also known as Instruction Pointer).
+
+        The value is a number representing the index of the *next* instruction.
+        """
+
+    @staticmethod
+    def links():
+        """Used to iterate over all the links."""
+
+    @staticmethod
+    def link_count():
+        """Return how many links there are connected to `this` logic processor."""
+
+    @staticmethod
+    def time():
+        """Return the current UNIX timestamp, in milliseconds."""
+
+    @staticmethod
+    def width():
+        """Return the width of the entire map, in tiles."""
+
+    @staticmethod
+    def height():
+        """Return the height of the entire map, in tiles."""
+
 
 class Screen:
+    """
+    Method interface to the `draw` and `drawflush` command.
+    """
+
     @staticmethod
     def clear(r: int, g: int, b: int):
         """Clear the entire display buffer to the given RGB values."""
