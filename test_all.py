@@ -342,29 +342,25 @@ def test_def():
         ''')
 
     expected = as_masm('''\
-        jump 14 always
+        jump 12 always
+        read __pyc_rc_0 cell1 __pyc_sp
         op sub __pyc_sp __pyc_sp 1
         read n cell1 __pyc_sp
-        jump 8 lessThan n 10
+        jump 9 lessThan n 10
         set __pyc_ret false
-        jump 10 always
-        jump 10 always
+        jump 11 always
+        jump 11 always
         set __pyc_ret true
-        jump 10 always
-        op sub __pyc_sp __pyc_sp 1
-        read __pyc_tmp cell1 __pyc_sp
-        op add __pyc_tmp __pyc_tmp 4
-        set @counter __pyc_tmp
-        write @counter cell1 __pyc_sp
-        op add __pyc_sp __pyc_sp 1
+        jump 11 always
+        op add @counter __pyc_rc_0 1
         write 5 cell1 __pyc_sp
         op add __pyc_sp __pyc_sp 1
+        write @counter cell1 __pyc_sp
         jump 2 always
         set a __pyc_ret
-        write @counter cell1 __pyc_sp
-        op add __pyc_sp __pyc_sp 1
         write 15 cell1 __pyc_sp
         op add __pyc_sp __pyc_sp 1
+        write @counter cell1 __pyc_sp
         jump 2 always
         set b __pyc_ret
         print "5 small? "
@@ -387,16 +383,46 @@ def test_def_sideeffects():
         ''')
 
     expected = as_masm('''\
-        jump 8 always
+        jump 6 always
+        read __pyc_rc_0 cell1 __pyc_sp
         print "bar"
         printflush message1
-        op sub __pyc_sp __pyc_sp 1
-        read __pyc_tmp cell1 __pyc_sp
-        op add __pyc_tmp __pyc_tmp 2
-        set @counter __pyc_tmp
+        op add @counter __pyc_rc_0 1
         write @counter cell1 __pyc_sp
-        op add __pyc_sp __pyc_sp 1
         jump 2 always
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
+def test_def_call_as_call_arg():
+    source = textwrap.dedent('''\
+        def square(n):
+            n **= 2
+            return n
+
+        r = square(square(2))
+        ''')
+
+    expected = as_masm('''\
+        jump 9 always
+        read __pyc_rc_0 cell1 __pyc_sp
+        op sub __pyc_sp __pyc_sp 1
+        read n cell1 __pyc_sp
+        op pow n n 2
+        set __pyc_ret n
+        jump 8 always
+        op add @counter __pyc_rc_0 1
+        write 2 cell1 __pyc_sp
+        op add __pyc_sp __pyc_sp 1
+        write @counter cell1 __pyc_sp
+        jump 2 always
+        write __pyc_ret cell1 __pyc_sp
+        op add __pyc_sp __pyc_sp 1
+        write @counter cell1 __pyc_sp
+        jump 2 always
+        set r __pyc_ret
         ''')
 
     masm = pyndustric.Compiler().compile(source)

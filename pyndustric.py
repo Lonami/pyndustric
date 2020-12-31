@@ -69,7 +69,7 @@ BIN_OPS = {
 
 REG_STACK = '__pyc_sp'
 REG_RET = '__pyc_ret'
-REG_TMP = '__pyc_tmp'
+REG_RET_COUNTER_PREFIX = '__pyc_rc_'
 
 @dataclass
 class Function:
@@ -221,6 +221,7 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_REDEF, node)
 
         self._in_def = node.name
+        reg_ret = f'{REG_RET_COUNTER_PREFIX}{len(self._functions)}'
 
         args = node.args
         if any((
@@ -239,6 +240,7 @@ class Compiler(ast.NodeVisitor):
         prologue = len(self._ins)
         self._functions[node.name] = Function(start=prologue, argc=len(args.args))
 
+        self._ins.append(f'read {reg_ret} cell1 {REG_STACK}')
         for arg in args.args:
             self._ins.append(f'op sub {REG_STACK} {REG_STACK} 1')
             self._ins.append(f'read {arg.arg} cell1 {REG_STACK}')
@@ -252,12 +254,8 @@ class Compiler(ast.NodeVisitor):
             if '{epilogue}' in self._ins[i]:
                 self._ins[i] = self._ins[i].format(epilogue=epilogue)
 
-        self._ins.append(f'op sub {REG_STACK} {REG_STACK} 1')
-        self._ins.append(f'read {REG_TMP} cell1 {REG_STACK}')
-        # @counter is next index after reading it (so no need to skip instruction that reads it)
-        # 1 to skip @counter stack increment, 1 to skip jump, 2 instructions per argument push
-        self._ins.append(f'op add {REG_TMP} {REG_TMP} {2 + len(args.args) * 2}')
-        self._ins.append(f'set @counter {REG_TMP}')
+        # Add 1 to the return value to skip the jump that made the call.
+        self._ins.append(f'op add @counter {reg_ret} 1')
 
         end = len(self._ins)
         self._ins[prologue - 1] = self._ins[prologue - 1].format(end)
@@ -438,15 +436,14 @@ class Compiler(ast.NodeVisitor):
             if len(node.args) != fn.argc:
                 raise CompilerError(ERR_ARGC_MISMATCH, node)
 
-            # TODO test nested call value `foo(foo(1))``
-            self._ins.append(f'write @counter cell1 {REG_STACK}')
-            self._ins.append(f'op add {REG_STACK} {REG_STACK} 1')
-
             for arg in node.args:
                 val = self.as_value(arg)
                 self._ins.append(f'write {val} cell1 {REG_STACK}')
                 self._ins.append(f'op add {REG_STACK} {REG_STACK} 1')
 
+            # `REG_STACK` is not updated because it's immediately read by the function.
+            # If it was, the `op add` followed by the `op sub` would be redundant.
+            self._ins.append(f'write @counter cell1 {REG_STACK}')
             self._ins.append(f'jump {fn.start} always')
             return REG_RET
         else:
