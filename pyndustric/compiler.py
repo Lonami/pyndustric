@@ -54,6 +54,17 @@ class Compiler(ast.NodeVisitor):
             left = self.as_value(value.left)
             right = self.as_value(value.right)
             self._ins.append(f'op {op} {target.id} {left} {right}')
+        elif isinstance(value, ast.Compare):
+            if len(value.ops) != 1 or len(value.comparators) != 1:
+                raise CompilerError(ERR_UNSUPPORTED_EXPR)
+
+            cmp = BIN_CMP.get(type(value.ops[0]))
+            if cmp is None:
+                raise CompilerError(ERR_UNSUPPORTED_OP, value)
+
+            left = self.as_value(value.left)
+            right = self.as_value(value.comparators[0])
+            self._ins.append(f'op {cmp} {target.id} {left} {right}')
         elif isinstance(value, ast.Call) \
                 and isinstance(value.func, ast.Attribute) \
                 and value.func.value.id == 'Sensor':

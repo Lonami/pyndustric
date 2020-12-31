@@ -140,12 +140,14 @@ def test_err_too_long():
 def test_assignments():
     source = textwrap.dedent('''\
         x = 1
-        z = x + 2
+        y = x + 2
+        z = x == y
         ''')
 
     expected = as_masm('''\
         set x 1
-        op add z x 2
+        op add y x 2
+        op equal z x y
         ''')
 
     masm = pyndustric.Compiler().compile(source)

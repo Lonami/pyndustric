@@ -59,7 +59,6 @@ BIN_OPS = {
     ast.BitOr: 'or',
     ast.BitAnd: 'and',
     ast.BitXor: 'xor',
-    **BIN_CMP,
 }
 
 ENV_TO_VAR = {
