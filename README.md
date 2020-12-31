@@ -39,16 +39,19 @@ for y in range(80):
         x -= 1
 ```
 
-Built-in functions to print messages and render on-screen ("system calls"), with [f-string] support:
+Built-in functions to print messages, with [f-string] support:
+
+```python
+var = 42
+print(f'The Answer: {var}')
+```
+
+Built-in functions to draw things to a display, like a tree:
 
 ```python
 # (optional) Get type-hinting in your editor of choice
 from pyndustri import *
 
-var = 42
-print(f'The Answer: {var}')
-
-# Draw a tree in a landscape
 Screen.clear(80, 150, 255)
 
 Screen.color(50, 200, 50)
@@ -59,6 +62,35 @@ Screen.rect(10, 10, 20, 40)
 
 Screen.color(50, 200, 50)
 Screen.poly(20, 50, 20, 100)
+```
+
+Built-in functions to access the environment, like time or links:
+
+```python
+current_time = Env.time()
+link_count = Env.link_count()
+```
+
+Built-in functions to access sensors, like the amount of copper or current health:
+
+```python
+copper = Sensor.copper(container1)
+need_resources = copper == 0  # we're out of copper!
+
+max_health = Sensor.max_health(duo1)
+health = Sensor.health(duo)
+
+health = health / max_health
+need_healing = health < 0.5  # less than 50% health!
+```
+
+Built-in functions to tell things what to do, like disabling them or shooting:
+
+```python
+for reactor in Env.links():
+    heat = Sensor.heat(reactor)
+    safe = heat == 0
+    Control.enabled(reactor, safe)  # turn off all reactors with non-zero heat
 ```
 
 Custom function definitions (until [this bug is fixed][ip-not-reset], re-importing a new program
@@ -99,6 +131,17 @@ $ python -m pyndustric yourprogram.py
 ## Known limitations
 
 Beware of very long programs, [there is a current limitation of 1000 instructions][limit-k].
+
+Currently only one memory cell is supported, which is used for the call stack.
+
+This program has hardly had any testing, so if you believe your program is misbehaving, there's
+a possibility that the compiler has a bug.
+
+## Contributing
+
+Contributors are more than welcome! Maybe you can improve the documentation, add something I
+missed, implement support for more Python features, or write a peephole optimizer for the
+compiler's output!
 
 [f-string]: https://docs.python.org/3/reference/lexical_analysis.html#f-strings
 [ip-not-reset]: https://github.com/Anuken/Mindustry/issues/4189
