@@ -93,8 +93,7 @@ for reactor in Env.links():
     Control.enabled(reactor, safe)  # turn off all reactors with non-zero heat
 ```
 
-Custom function definitions (until [this bug is fixed][ip-not-reset], re-importing a new program
-using functions may act weird because some critical state can't be properly cleaned up):
+Custom function definitions:
 
 ```python
 def is_prime(n):
@@ -111,6 +110,11 @@ if p:
 else:
     print('7 is not prime???')
 ```
+
+> **Note**: as of steam build 122.1, the processor state is not reset even if you import new code,
+> so functions which rely on a special stack pointer variable may behave strange if you import new
+> code. To fix this import empty code (which clears the instruction pointer) and then import the
+> real code, or upgrade your Mindustry version. [Original bug report][[ip-not-reset].
 
 ## Documentation
 
