@@ -1,5 +1,6 @@
 import pyndustric
 import pytest
+import sys
 import textwrap
 
 
@@ -107,8 +108,9 @@ def test_err_invalid_def():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_INVALID_DEF):
         pyndustric.Compiler().compile("def foo(*, a): pass")
 
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_INVALID_DEF):
-        pyndustric.Compiler().compile("def foo(a, /, b): pass")
+    if sys.version_info >= (3, 8):
+        with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_INVALID_DEF):
+            pyndustric.Compiler().compile("def foo(a, /, b): pass")
 
 
 def test_err_redef():

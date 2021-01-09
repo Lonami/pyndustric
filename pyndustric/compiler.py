@@ -1,5 +1,5 @@
 import ast
-
+import sys
 from dataclasses import dataclass
 from .constants import *
 
@@ -15,6 +15,28 @@ class CompilerError(ValueError):
         super().__init__(f"[{code}/{node.lineno}:{node.col_offset}] {ERROR_DESCRIPTIONS[code]}")
 
 
+if sys.version_info < (3, 8):
+
+    class CompatTransformer(ast.NodeTransformer):
+        def visit_Num(self, node):
+            return ast.copy_location(ast.Constant(value=node.n), node)
+
+        def visit_Str(self, node):
+            return ast.copy_location(ast.Constant(value=node.s), node)
+
+        def visit_Bytes(self, node):
+            return ast.copy_location(ast.Constant(value=node.s), node)
+
+        def visit_NameConstant(self, node):
+            return ast.copy_location(ast.Constant(value=node.value), node)
+
+
+else:
+
+    class CompatTransformer(ast.NodeTransformer):
+        pass
+
+
 class Compiler(ast.NodeVisitor):
     def __init__(self):
         self._ins = [
@@ -28,7 +50,9 @@ class Compiler(ast.NodeVisitor):
         return self.generate_masm()
 
     def visit(self, node):
-        super().visit(node)
+        compat = CompatTransformer()
+        compat_node = compat.visit(node)
+        super().visit(compat_node)
 
     def visit_Import(self, node):
         raise CompilerError(ERR_UNSUPPORTED_IMPORT, node)
@@ -201,7 +225,6 @@ class Compiler(ast.NodeVisitor):
         args = node.args
         if any(
             (
-                args.posonlyargs,
                 args.vararg,
                 args.kwonlyargs,
                 args.kw_defaults,
@@ -210,6 +233,10 @@ class Compiler(ast.NodeVisitor):
             )
         ):
             raise CompilerError(ERR_INVALID_DEF, node)
+
+        if sys.version_info >= (3, 8):
+            if args.posonlyargs:
+                raise CompilerError(ERR_INVALID_DEF, node)
 
         # TODO it's better to put functions at the end and not have to skip them as code, but jumps need fixing
         self._ins.append("jump {} always")
