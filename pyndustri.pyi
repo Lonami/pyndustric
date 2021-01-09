@@ -1,9 +1,7 @@
 from typing import Iterator, Optional, Union
 
-
 class Link:
     """Represents a link."""
-
 
 class Env:
     """
@@ -13,15 +11,12 @@ class Env:
     @staticmethod
     def this():
         """Return the `Building` object representing this logic processor."""
-
     @staticmethod
     def x():
         """Return the `x` coordinate where `this` is located."""
-
     @staticmethod
     def y():
         """Return the `y` coordinate where `this` is located."""
-
     @staticmethod
     def counter():
         """
@@ -29,27 +24,21 @@ class Env:
 
         The value is a number representing the index of the *next* instruction.
         """
-
     @staticmethod
     def links() -> Iterator[Link]:
         """Used to iterate over all the links."""
-
     @staticmethod
     def link_count():
         """Return how many links there are connected to `this` logic processor."""
-
     @staticmethod
     def time():
         """Return the current UNIX timestamp, in milliseconds."""
-
     @staticmethod
     def width():
         """Return the width of the entire map, in tiles."""
-
     @staticmethod
     def height():
         """Return the height of the entire map, in tiles."""
-
 
 # https://github.com/Anuken/Mindustry/blob/e714d44/core/assets/bundles/bundle.properties#L979-L998
 # https://github.com/Anuken/Mindustry/blob/8bc349b/core/src/mindustry/logic/LAccess.java#L6-L47
@@ -57,6 +46,7 @@ class Sensor:
     """
     Access to a property of a given link.
     """
+
     @staticmethod
     def copper(link: Link) -> int:
         """Amount of Copper stored or carried by the link."""
@@ -225,21 +215,18 @@ class Sensor:
     def enabled(link: Link) -> bool:
         """Is this link enabled?"""
 
-
 class Control:
     """
     Lets you control a given link.
     """
+
     @staticmethod
     def enabled(link: Link, enabled: bool):
         """Sets the link enabled or disabled, based on the given value."""
-
     def shoot(link: Link, x: int, y: int, enabled: bool = True):
         """Sets the link to shoot or not, and if shooting, the position."""
-
     def ceasefire(link: Link):
         """Shorthand to stop firing."""
-
 
 class Screen:
     """
@@ -249,15 +236,12 @@ class Screen:
     @staticmethod
     def clear(r: int, g: int, b: int):
         """Clear the entire display buffer to the given RGB values."""
-
     @staticmethod
     def color(r: int, g: int, b: int, a: int = 255):
         """Set the current brush color to the given RGBA values."""
-
     @staticmethod
     def stroke(width: int):
         """Set the current brush stroke width to the given value."""
-
     @staticmethod
     def line(x0: int, y0: int, x1: int, y1: int):
         """
@@ -267,19 +251,16 @@ class Screen:
 
         You may use it to make rotated rectangles by setting a big enough stroke.
         """
-
     @staticmethod
     def rect(x: int, y: int, width: int, height: int):
         """
         Draw a filled rectangle with its bottom-left corner at `(x, y)` and size `(width, height)`.
         """
-
     @staticmethod
     def hollow_rect(x: int, y: int, width: int, height: int):
         """
         Like `rect`, but hollow. This border width considers the `stroke`.
         """
-
     @staticmethod
     def poly(x: int, y: int, radius: int, sides: int, rotation: int = 0):
         """
@@ -289,29 +270,24 @@ class Screen:
 
         The rotation is optional and specified in degrees.
         """
-
     @staticmethod
     def hollow_poly(x: int, y: int, radius: int, sides: int, rotation: int = 0):
         """
         Like `poly`, but hollow. This border width considers the `stroke`.
         """
-
     @staticmethod
     def triangle(x0: int, y0: int, x1: int, y1: int, x2: int, y2: int):
         """
         Draw a triangle with corners at `(x0, y0)`, `(x1, y1)` and `(x2, y2)`.
         """
-
     @staticmethod
     def image(x: int, y: int, image: Resource, size: int, rotation: int = 0):
         """
         Draw the image resource centered at `(x, y)` with `size` and optional `rotation`.
         """
-
     @staticmethod
     def flush(display: str = None):
         """Flush the screen buffer to the display."""
-
 
 def print(message: str, flush: Union[bool, str] = True):
     """

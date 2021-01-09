@@ -4,254 +4,279 @@ import textwrap
 
 
 def as_masm(source):
-    return 'set __pyc_sp 0\n' + textwrap.dedent(source).strip() + '\nend\n'
+    return "set __pyc_sp 0\n" + textwrap.dedent(source).strip() + "\nend\n"
 
 
 def test_all_err_have_desc_and_tests():
-    error_names = [name for name in dir(pyndustric) if name.startswith('ERR_')]
+    error_names = [name for name in dir(pyndustric) if name.startswith("ERR_")]
     error_values = {getattr(pyndustric, name) for name in error_names}
 
-    assert len(error_values) == len(error_names), 'some error constants have duplicate values'
-    assert len(error_values) == len(pyndustric.ERROR_DESCRIPTIONS), 'not all errors are documented'
+    assert len(error_values) == len(error_names), "some error constants have duplicate values"
+    assert len(error_values) == len(pyndustric.ERROR_DESCRIPTIONS), "not all errors are documented"
 
-    with open(__file__, encoding='utf-8') as fd:
+    with open(__file__, encoding="utf-8") as fd:
         source = fd.read()
 
     for name in error_names:
-        assert name in source, 'error is missing a test'
+        assert name in source, "error is missing a test"
 
 
 def test_err_multi_assign():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_MULTI_ASSIGN):
-        pyndustric.Compiler().compile('a = b = 1')
+        pyndustric.Compiler().compile("a = b = 1")
 
 
 def test_err_complex_assign():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_ASSIGN):
-        pyndustric.Compiler().compile('a, b = 1, 2')
+        pyndustric.Compiler().compile("a, b = 1, 2")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_ASSIGN):
-        pyndustric.Compiler().compile('a.b = 1')
+        pyndustric.Compiler().compile("a.b = 1")
 
 
 def test_err_complex_value():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_VALUE):
-        pyndustric.Compiler().compile('a = 1 + (2 + 3)')
+        pyndustric.Compiler().compile("a = 1 + (2 + 3)")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_VALUE):
-        pyndustric.Compiler().compile('a += 1 + 2')
+        pyndustric.Compiler().compile("a += 1 + 2")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_VALUE):
-        pyndustric.Compiler().compile('a = 1 + 2j')
+        pyndustric.Compiler().compile("a = 1 + 2j")
 
 
 def test_err_unsupported_op():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_OP):
-        pyndustric.Compiler().compile('a = m0 @ m1')
+        pyndustric.Compiler().compile("a = m0 @ m1")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_OP):
-        pyndustric.Compiler().compile('a @= m')
+        pyndustric.Compiler().compile("a @= m")
 
 
 def test_err_unsupported_iter():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_ITER):
-        pyndustric.Compiler().compile('for x in [1, 2]: pass')
+        pyndustric.Compiler().compile("for x in [1, 2]: pass")
 
 
 def test_err_bad_iter_args():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_ITER_ARGS):
-        pyndustric.Compiler().compile('for x in range(): pass')
+        pyndustric.Compiler().compile("for x in range(): pass")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_ITER_ARGS):
-        pyndustric.Compiler().compile('for x in range(1, 2, 3, 4): pass')
+        pyndustric.Compiler().compile("for x in range(1, 2, 3, 4): pass")
 
 
 def test_err_unsupported_import():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_IMPORT):
-        pyndustric.Compiler().compile('from math import log')
+        pyndustric.Compiler().compile("from math import log")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_IMPORT):
-        pyndustric.Compiler().compile('import pyndustri')
+        pyndustric.Compiler().compile("import pyndustri")
 
 
 def test_err_unsupported_expr():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_EXPR):
-        pyndustric.Compiler().compile('1 + (2 + 3)')
+        pyndustric.Compiler().compile("1 + (2 + 3)")
 
 
 def test_err_unsupported_syscall():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_SYSCALL):
-        pyndustric.Compiler().compile('Missing.method()')
+        pyndustric.Compiler().compile("Missing.method()")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_SYSCALL):
-        pyndustric.Compiler().compile('Screen.missing()')
+        pyndustric.Compiler().compile("Screen.missing()")
 
 
 def test_err_bad_syscall_args():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_SYSCALL_ARGS):
-        pyndustric.Compiler().compile('Screen.clear(1)')
+        pyndustric.Compiler().compile("Screen.clear(1)")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_SYSCALL_ARGS):
-        pyndustric.Compiler().compile('Screen.clear(1, 2, 3, 4)')
+        pyndustric.Compiler().compile("Screen.clear(1, 2, 3, 4)")
 
 
 def test_err_nested_def():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_NESTED_DEF):
-        pyndustric.Compiler().compile('def foo():\n  def bar():\n    pass')
+        pyndustric.Compiler().compile("def foo():\n  def bar():\n    pass")
 
 
 def test_err_invalid_def():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_INVALID_DEF):
-        pyndustric.Compiler().compile('def foo(a=None): pass')
+        pyndustric.Compiler().compile("def foo(a=None): pass")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_INVALID_DEF):
-        pyndustric.Compiler().compile('def foo(*, a): pass')
+        pyndustric.Compiler().compile("def foo(*, a): pass")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_INVALID_DEF):
-        pyndustric.Compiler().compile('def foo(a, /, b): pass')
+        pyndustric.Compiler().compile("def foo(a, /, b): pass")
 
 
 def test_err_redef():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_REDEF):
-        pyndustric.Compiler().compile('def foo(): pass\ndef foo(): pass')
+        pyndustric.Compiler().compile("def foo(): pass\ndef foo(): pass")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_REDEF):
-        pyndustric.Compiler().compile('def print(): pass')
+        pyndustric.Compiler().compile("def print(): pass")
 
 
 def test_err_no_def():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_NO_DEF):
-        pyndustric.Compiler().compile('x = foo()')
+        pyndustric.Compiler().compile("x = foo()")
 
 
 def test_err_argc_mismatch():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_ARGC_MISMATCH):
-        pyndustric.Compiler().compile('def foo(n): pass\nx = foo()')
+        pyndustric.Compiler().compile("def foo(n): pass\nx = foo()")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_ARGC_MISMATCH):
-        pyndustric.Compiler().compile('def foo(n): pass\nx = foo(1, 2)')
+        pyndustric.Compiler().compile("def foo(n): pass\nx = foo(1, 2)")
 
 
 def test_err_too_long():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_TOO_LONG):
-        pyndustric.Compiler().compile('x = 1\n' * (1 + pyndustric.MAX_INSTRUCTIONS))
+        pyndustric.Compiler().compile("x = 1\n" * (1 + pyndustric.MAX_INSTRUCTIONS))
 
 
 def test_assignments():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         x = 1
         y = x + 2
         z = x == y
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         set x 1
         op add y x 2
         op equal z x y
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_types():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         x = True
         y = 1
         z = 0.1
         a = "string"
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         set x true
         set y 1
         set z 0.1
         set a "string"
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_aug_assignments():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         x = 1
         x += 1
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         set x 1
         op add x x 1
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_if():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         x = 1
         if x:
             y = 1
         z = 1
-        ''')
+        """
+    )
 
     # TODO negate initial jmp condition with no else
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         set x 1
         jump 4 notEqual x 0
         jump 5 always
         set y 1
         set z 1
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_complex_if():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         x = 1
         if x < 10:
             y = 1
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         set x 1
         jump 4 lessThan x 10
         jump 5 always
         set y 1
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_if_else():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         x = 1
         if x:
             y = 1
         else:
             y = 0
         z = 1
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         set x 1
         jump 5 notEqual x 0
         set y 0
         jump 6 always
         set y 1
         set z 1
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_if_elif_else():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         x = 1
         if x == 0:
             y = 1
@@ -259,10 +284,12 @@ def test_if_elif_else():
             y = 2
         else:
             y = 3
-        ''')
+        """
+    )
 
     # TODO detect jump-to-jump and rewrite to follow the chain
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         set x 1
         jump 8 equal x 0
         jump 6 equal x 1
@@ -271,72 +298,86 @@ def test_if_elif_else():
         set y 2
         jump 9 always
         set y 1
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_while():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         x = 10
         while x:
             x = x - 1
         z = 1
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         set x 10
         jump 4 always
         op sub x x 1
         jump 3 notEqual x 0
         set z 1
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_for():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         for x in range(10):
             y = x + x
         z = 1
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         set x 0
         jump 6 greaterThanEq x 10
         op add y x x
         op add x x 1
         jump 2 always
         set z 1
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         for x in range(5, 10):
             y = x + x
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
-    assert 'set x 5' in masm
+    assert "set x 5" in masm
 
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         for x in range(0, 10, 3):
             y = x + x
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
-    assert 'op add x x 3' in masm
+    assert "op add x x 3" in masm
 
 
 def test_def():
     # TODO cells can't store strings, test that no fn args are
     # TODO standalone calls are not supported
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         def small(n):
             if n < 10:
                 return True
@@ -346,9 +387,11 @@ def test_def():
         a = small(5)
         b = small(15)
         print(f'5 small? {a}, 15 small? {b}')
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         jump 12 always
         read __pyc_rc_0 cell1 __pyc_sp
         op sub __pyc_sp __pyc_sp 1
@@ -375,21 +418,25 @@ def test_def():
         print ", 15 small? "
         print b
         printflush message1
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_def_sideeffects():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         def foo():
             print('bar')
 
         foo()
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         jump 6 always
         read __pyc_rc_0 cell1 __pyc_sp
         print "bar"
@@ -397,22 +444,26 @@ def test_def_sideeffects():
         op add @counter __pyc_rc_0 1
         write @counter cell1 __pyc_sp
         jump 2 always
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_def_call_as_call_arg():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         def square(n):
             n **= 2
             return n
 
         r = square(square(2))
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         jump 9 always
         read __pyc_rc_0 cell1 __pyc_sp
         op sub __pyc_sp __pyc_sp 1
@@ -430,22 +481,26 @@ def test_def_call_as_call_arg():
         write @counter cell1 __pyc_sp
         jump 2 always
         set r __pyc_ret
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_print():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         x = 1
         y = 2
         print("showing variables:")
         print(f"x = {x}, y = ", flush=False)
         print(y, flush=message1)
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         set x 1
         set y 2
         print "showing variables:"
@@ -455,14 +510,16 @@ def test_print():
         print ", y = "
         print y
         printflush message1
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_env():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         this = Env.this()
         x = Env.x()
         y = Env.y()
@@ -474,9 +531,11 @@ def test_env():
 
         for link in Env.links():
             pass
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         set this @this
         set x @thisx
         set y @thisy
@@ -490,27 +549,33 @@ def test_env():
         getlink link __pyc_it_10_12
         op add __pyc_it_10_12 __pyc_it_10_12 1
         jump 10 always
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_sensor():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         copper = Sensor.copper(container1)
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         sensor copper container1 @copper
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_draw():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         from pyndustri import *
 
         Screen.clear(255, 0, 0)
@@ -523,9 +588,11 @@ def test_draw():
         Screen.hollow_poly(60, 60, 20, 5)
         Screen.triangle(70, 80, 80, 80, 80, 70)
         Screen.flush()
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         draw clear 255 0 0
         draw color 0 255 255 255
         draw stroke 2
@@ -536,24 +603,29 @@ def test_draw():
         draw linePoly 60 60 5 20 0
         draw triangle 70 80 80 80 80 70
         drawflush display1
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
 
 def test_control():
-    source = textwrap.dedent('''\
+    source = textwrap.dedent(
+        """\
         Control.enabled(reactor, False)
         Control.shoot(duo1, 10, 20)
         Control.ceasefire(scatter1)
-        ''')
+        """
+    )
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         control enabled reactor false
         control shoot duo1 10 20 1
         control shoot scatter1 0 0 0
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
