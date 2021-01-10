@@ -4,7 +4,8 @@ import textwrap
 
 
 def as_masm(source):
-    return 'set __pyc_sp 0\n' + textwrap.dedent(source).strip() + '\nend\n'
+    return 'set __pyc_sp 0\n' + textwrap.dedent(source).strip() # + '\nend\n'
+    # Telos:  I removed the postfix end command, since not all programs will want it
 
 
 def test_all_err_have_desc_and_tests():
@@ -196,16 +197,16 @@ def test_if():
         z = 1
         ''')
 
-    # TODO negate initial jmp condition with no else
+    # TODO negate initial jmp condition with no else.  Telos: DONE!
     expected = as_masm('''\
         set x 1
-        jump 4 notEqual x 0
-        jump 5 always
+        jump 4 equal x 0
         set y 1
         set z 1
         ''')
 
     masm = pyndustric.Compiler().compile(source)
+    print("\n-------------------------\n"+masm)
     assert masm == expected
 
 
@@ -218,8 +219,7 @@ def test_complex_if():
 
     expected = as_masm('''\
         set x 1
-        jump 4 lessThan x 10
-        jump 5 always
+        jump 4 greaterThanEq x 10
         set y 1
         ''')
 
@@ -239,10 +239,10 @@ def test_if_else():
 
     expected = as_masm('''\
         set x 1
-        jump 5 notEqual x 0
-        set y 0
-        jump 6 always
+        jump 5 equal x 0
         set y 1
+        jump 6 always
+        set y 0
         set z 1
         ''')
 
@@ -262,20 +262,20 @@ def test_if_elif_else():
         ''')
 
     # TODO detect jump-to-jump and rewrite to follow the chain
+    #     Telos: I think my re-implementation of this probably fixed whatever you'd been worried about???
     expected = as_masm('''\
         set x 1
-        jump 8 equal x 0
-        jump 6 equal x 1
-        set y 3
-        jump 7 always
+        jump 5 notEqual x 0
+        set y 1
+        jump 9 always
+        jump 8 notEqual x 1
         set y 2
         jump 9 always
-        set y 1
+        set y 3
         ''')
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
-
 
 def test_while():
     source = textwrap.dedent('''\
@@ -287,9 +287,80 @@ def test_while():
 
     expected = as_masm('''\
         set x 10
-        jump 4 always
+        jump 5 equal x 0
         op sub x x 1
         jump 3 notEqual x 0
+        set z 1
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+def test_complex_while():
+    source = textwrap.dedent('''\
+        x = 10
+        while x>5:
+            x -= 1
+        z = 1
+        ''')
+
+    expected = as_masm('''\
+        set x 10
+        jump 5 lessThanEq x 5
+        op sub x x 1
+        jump 3 greaterThan x 5
+        set z 1
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+def test_while_and():
+    # this tests both negated-and (entering loop) and affirmative-and (test to loop back up)
+    source = textwrap.dedent('''\
+        x = 10
+        y = 5
+        while x and y:
+            x -= 1
+            y -= 1
+        z = 1
+        ''')
+
+    expected = as_masm('''\
+        set x 10
+        set y 5
+        jump 9 equal x 0 
+        jump 9 equal y 0 
+        op sub x x 1
+        op sub y y 1
+        jump 9 equal x 0 
+        jump 5 notEqual y 0 
+        set z 1
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+def test_while_or():
+    # this tests both negated-or (entering loop) and affirmative-or (test to loop back up)
+    source = textwrap.dedent('''\
+        x = 0
+        y = 1
+        while x or y:
+            x = y
+            y = y - x
+        z = 1
+        ''')
+
+    expected = as_masm('''\
+        set x 0
+        set y 1
+        jump 5 notEqual x 0 
+        jump 9 Equal y 0 
+        set x y
+        op sub y y x
+        jump 5 notEqual x 0 
+        jump 5 notEqual y 0 
         set z 1
         ''')
 

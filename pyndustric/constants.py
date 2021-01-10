@@ -39,12 +39,27 @@ ERROR_DESCRIPTIONS = {
 BIN_CMP = {
     ast.Eq: 'equal',
     ast.NotEq: 'notEqual',
-    ast.And: 'land',
+    ast.And: 'and',
+    ast.Or: 'or',
     ast.Lt: 'lessThan',
     ast.LtE: 'lessThanEq',
     ast.Gt: 'greaterThan',
     ast.GtE: 'greaterThanEq',
 }
+#TODO Should we also somehow handle OR?
+
+NEGATED_BIN_CMP = {
+    'equal': 'notEqual',
+    'notEqual': 'equal',
+    'lessThan': 'greaterThanEq',
+    'greaterThanEq': 'lessThan',
+    'greaterThan': 'lessThanEq',
+    'lessThanEq': 'greaterThan',
+    'and': 'nand',
+    'or': 'nor'
+}
+#TODO Figure out how to handle negation of land, and eventually also lor?
+
 
 BIN_OPS = {
     ast.Add: 'add',
