@@ -28,7 +28,10 @@ class _Label(_Instruction):
         self._lineno = None
 
     def __str__(self):
-        assert self._lineno is not None, "internal compiler error: lineno should be set"
+        assert self._lineno is not None, (
+            "internal compiler error: lineno should be set."
+            " some instruction likely referenced this unstored label"
+        )
         return str(self._lineno)
 
 
@@ -347,6 +350,7 @@ class Compiler(ast.NodeVisitor):
         self.ins_append(_Jump(end, "always"))
 
         prologue = _Label()
+        self.ins_append(prologue)
         self._functions[node.name] = Function(start=prologue, argc=len(args.args))
 
         self.ins_append(f"read {reg_ret} cell1 {REG_STACK}")
@@ -354,11 +358,13 @@ class Compiler(ast.NodeVisitor):
             self.ins_append(f"op sub {REG_STACK} {REG_STACK} 1")
             self.ins_append(f"read {arg.arg} cell1 {REG_STACK}")
 
+        # This relies on the fact that there are no nested definitions.
+        # Set the epilogue now so that `visit_Return` can use this label.
+        self._epilogue = _Label()
+
         for subnode in node.body:
             self.visit(subnode)
 
-        # This relies on the fact that there are no nested definitions
-        self._epilogue = _Label()
         self.ins_append(self._epilogue)
 
         # Add 1 to the return value to skip the jump that made the call.
@@ -368,9 +374,10 @@ class Compiler(ast.NodeVisitor):
         self._epilogue = None
 
     def visit_Return(self, node):
+        assert self._epilogue, "internal compiler error: return encountered with epilogue being unset"
         val = self.as_value(node.value)
         self.ins_append(f"set {REG_RET} {val}")
-        self.ins_append(_Jump(self._epilogue), "always")
+        self.ins_append(_Jump(self._epilogue, "always"))
 
     def visit_Expr(self, node):
         call = node.value
