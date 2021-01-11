@@ -144,6 +144,9 @@ def test_compile_function():
         """Skip me!"""
         x = 1
 
+    def source2():
+        x = 1
+
     expected = as_masm(
         """\
         set x 1
@@ -151,6 +154,9 @@ def test_compile_function():
     )
 
     masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+    masm = pyndustric.Compiler().compile(source2)
     assert masm == expected
 
 
