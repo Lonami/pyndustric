@@ -6,16 +6,6 @@ import sys
 import textwrap
 
 
-@dataclass
-class Function:
-    """
-    Stores information about a user-defined functions which are callable within a compilable program.
-    """
-
-    start: int  # line number for the start of the function within the compiled program
-    argc: int  # count of number of arguments the function takes
-
-
 class _Instruction:
     """
     Represents a mlog instruction.
@@ -55,6 +45,16 @@ class _Jump(_Instruction):
         return super().__str__().format(self._label)
 
 
+@dataclass
+class Function:
+    """
+    Stores information about a user-defined functions which are callable within a compilable program.
+    """
+
+    start: _Label  # label pointing to the function's prologue
+    argc: int  # count of number of arguments the function takes
+
+
 class CompilerError(ValueError):
     def __init__(self, code, node: ast.AST):
         if node is None:
@@ -92,7 +92,8 @@ def _parse_code(code: str):
 class Compiler(ast.NodeVisitor):
     def __init__(self):
         self._ins = [_Instruction(f"set {REG_STACK} 0")]
-        self._in_def = None
+        self._in_def = None  # current function name
+        self._epilogue = None  # current function's epilogue label
         self._functions = {}
 
     def ins_append(self, ins):
@@ -342,9 +343,10 @@ class Compiler(ast.NodeVisitor):
                 raise CompilerError(ERR_INVALID_DEF, node)
 
         # TODO it's better to put functions at the end and not have to skip them as code, but jumps need fixing
-        self.ins_append("jump {} always")
+        end = _Label()
+        self.ins_append(_Jump(end, "always"))
 
-        prologue = len(self._ins)  # line number where the function definition begins
+        prologue = _Label()
         self._functions[node.name] = Function(start=prologue, argc=len(args.args))
 
         self.ins_append(f"read {reg_ret} cell1 {REG_STACK}")
@@ -355,23 +357,20 @@ class Compiler(ast.NodeVisitor):
         for subnode in node.body:
             self.visit(subnode)
 
-        epilogue = len(self._ins)
-        # TODO better way to patch this (ins should be concrete types, not immutable strings)
-        for i in range(prologue, epilogue):
-            if "{epilogue}" in self._ins[i]:
-                self._ins[i] = self._ins[i].format(epilogue=epilogue)
+        # This relies on the fact that there are no nested definitions
+        self._epilogue = _Label()
+        self.ins_append(self._epilogue)
 
         # Add 1 to the return value to skip the jump that made the call.
         self.ins_append(f"op add @counter {reg_ret} 1")
-
-        end = len(self._ins)
-        self._ins[prologue - 1] = self._ins[prologue - 1].format(end)
+        self.ins_append(end)
         self._in_def = None
+        self._epilogue = None
 
     def visit_Return(self, node):
         val = self.as_value(node.value)
         self.ins_append(f"set {REG_RET} {val}")
-        self.ins_append("jump {epilogue} always")
+        self.ins_append(_Jump(self._epilogue), "always")
 
     def visit_Expr(self, node):
         call = node.value
@@ -582,7 +581,7 @@ class Compiler(ast.NodeVisitor):
                 self.ins_append(f"op add {REG_STACK} {REG_STACK} 1")
 
             self.ins_append(f"write @counter cell1 {REG_STACK}")
-            self.ins_append(f"jump {fn.start} always")
+            self.ins_append(_Jump(fn.start, "always"))
             return REG_RET
         else:
             raise CompilerError(ERR_COMPLEX_VALUE, node)
