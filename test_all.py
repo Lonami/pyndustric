@@ -259,8 +259,7 @@ def test_if():
     expected = as_masm(
         """\
         set x 1
-        jump 4 notEqual x 0
-        jump 5 always
+        jump 4 equal x 0
         set y 1
         set z 1
         """
@@ -282,8 +281,7 @@ def test_complex_if():
     expected = as_masm(
         """\
         set x 1
-        jump 4 lessThan x 10
-        jump 5 always
+        jump 4 greaterThanEq x 10
         set y 1
         """
     )
@@ -307,10 +305,10 @@ def test_if_else():
     expected = as_masm(
         """\
         set x 1
-        jump 5 notEqual x 0
-        set y 0
-        jump 6 always
+        jump 5 equal x 0
         set y 1
+        jump 6 always
+        set y 0
         set z 1
         """
     )
@@ -332,17 +330,16 @@ def test_if_elif_else():
         """
     )
 
-    # TODO detect jump-to-jump and rewrite to follow the chain
     expected = as_masm(
         """\
         set x 1
-        jump 8 equal x 0
-        jump 6 equal x 1
-        set y 3
-        jump 7 always
+        jump 5 notEqual x 0
+        set y 1
+        jump 9 always
+        jump 8 notEqual x 1
         set y 2
         jump 9 always
-        set y 1
+        set y 3
         """
     )
 
@@ -363,7 +360,7 @@ def test_while():
     expected = as_masm(
         """\
         set x 10
-        jump 4 always
+        jump 5 equal x 0
         op sub x x 1
         jump 3 notEqual x 0
         set z 1
@@ -441,11 +438,11 @@ def test_def():
         read __pyc_rc_0 cell1 __pyc_sp
         op sub __pyc_sp __pyc_sp 1
         read n cell1 __pyc_sp
-        jump 9 lessThan n 10
-        set __pyc_ret false
-        jump 11 always
-        jump 11 always
+        jump 9 greaterThanEq n 10
         set __pyc_ret true
+        jump 11 always
+        jump 11 always
+        set __pyc_ret false
         jump 11 always
         op add @counter __pyc_rc_0 1
         write 5 cell1 __pyc_sp

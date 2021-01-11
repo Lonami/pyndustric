@@ -39,11 +39,23 @@ ERROR_DESCRIPTIONS = {
 BIN_CMP = {
     ast.Eq: "equal",
     ast.NotEq: "notEqual",
-    ast.And: "land",
+    ast.And: "and",
+    ast.Or: "or",
     ast.Lt: "lessThan",
     ast.LtE: "lessThanEq",
     ast.Gt: "greaterThan",
     ast.GtE: "greaterThanEq",
+}
+
+NEGATED_BIN_CMP = {
+    "equal": "notEqual",
+    "notEqual": "equal",
+    "lessThan": "greaterThanEq",
+    "greaterThanEq": "lessThan",
+    "greaterThan": "lessThanEq",
+    "lessThanEq": "greaterThan",
+    "and": "nand",
+    "or": "nor",
 }
 
 BIN_OPS = {
