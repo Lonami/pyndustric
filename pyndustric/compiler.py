@@ -1,8 +1,12 @@
 import ast # standard python module for generating and using an abstract syntax tree (ast) representing python code
 
 from dataclasses import dataclass # standard python module for simple classes used just to store data in attributes
-from .constants import *          # definitions of various constants mapping Python entitites to mlog equivalents
 from collections import Counter   # dictionary subclass used to count instances of different types of label/variable
+import inspect                    # standard python module used to retrieve source code from functions to compile them
+import textwrap                   # standard python module used for changing indentation, e.g., of source code
+
+
+from .constants import *          # definitions of various constants mapping Python entitites to mlog equivalents
 
 @dataclass
 class Function:
@@ -92,14 +96,26 @@ class Compiler(ast.NodeVisitor):
 
     def compile(self, code):
         """This is the main function for the compiler taking in a chunk of Python code (specified either as a
-        string, TODO as a function whose source code file can be found via python's inspect module,
+        string, as a function whose source code file can be found via python's inspect module,
         or TODO as a Path indicating a source code file to compile.
         This visits various nodes in the syntax tree of that code, amassing a list of mlog instructions that will
         perform the equivalent of that code in mindustry.
         This list is then concatenated into a single string, and returned."""
-        # TODO enable this to handle function and Path inputs, not just strings
 
-        self.visit(ast.parse(code))  # visit the root node of the syntax tree, which will then visit branches and leaves
+        # TODO enable this to handle function and Path inputs, not just strings
+        body: list[ast.AST]  # will store one or more AST nodes composing the body of code to be compiled
+        if callable(code): # if code is given as a function, we'll compile its body (ignoring def and docstring)
+            code = textwrap.dedent( inspect.getsource(code) ) # looks up function's source code from file
+            body = ast.parse(code).body[0].body # i.e., tree.body_of_tree[0th stmt, namely "def..."].body_of_function
+            if ( isinstance( body[0], ast.Expr ) and
+                 isinstance( body[0].value, ast.Constant ) and
+                 isinstance( body[0].value.value, str) ):
+                body = body[1:] # if zeroth statement in function body is a docstring, bypass it
+        else: # if we were given a string to compile:
+            body = ast.parse(code).body # list of statements (ast nodes) composing the body of the given string
+
+        for node in body:  # visit successive statements in the body of code we're compiling
+            self.visit(node)
 
         # TODO insert any optimization pass(es) we want to make before finalizing line numbers
 
