@@ -16,16 +16,43 @@ class Function:
     argc: int  # count of number of arguments the function takes
 
 
-class _Instruction(str):
+class _Instruction:
     """
     Represents a mlog instruction.
     """
+
+    def __init__(self, ins: str):
+        self._ins = ins
+
+    def __str__(self):
+        return self._ins
 
 
 class _Label(_Instruction):
     """
     Represents a no-op instruction used to label certain destinations for mlog jumps.
     """
+
+    def __init__(self):
+        super().__init__("")
+        self._lineno = None
+
+    def __str__(self):
+        assert self._lineno is not None, "internal compiler error: lineno should be set"
+        return self._lineno
+
+
+class _Jump(_Instruction):
+    """
+    Represents a jump instruction towards a specific label.
+    """
+
+    def __init__(self, label: _Label, condition: str):
+        super().__init__(f"jump {{}} {condition}")
+        self._label = label
+
+    def __str__(self):
+        return super().__str__().format(self._label)
 
 
 class CompilerError(ValueError):
@@ -195,52 +222,32 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_UNSUPPORTED_OP, test)
 
         if cmp == "and":
-            failed_label = self.Label("one_is_false")
-            self.ins_append(
-                f"jump {failed_label} equal {left} 0 "
-            )
-            self.ins_append(
-                f"jump {destination_label} notEqual {right} 0 "
-            )
+            failed_label = _Label()
+            self.ins_append(_Jump(failed_label, f"equal {left} 0"))
+            self.ins_append(_Jump(destination_label, f"notEqual {right} 0"))
             self.ins_append(failed_label)
         elif cmp == "or":
-            self.ins_append(
-                f"jump {destination_label} notEqual {left} 0 "
-            )
-            self.ins_append(f"jump {destination_label} notEqual {right} 0 ")
+            self.ins_append(_Jump(destination_label, f"notEqual {left} 0"))
+            self.ins_append(_Jump(destination_label, f"notEqual {right} 0"))
         elif cmp == "nand":
-            self.ins_append(
-                f"jump {destination_label} equal {left} 0 "
-            )
-            self.ins_append(f"jump {destination_label} equal {right} 0 ")
+            self.ins_append(_Jump(destination_label, f"equal {left} 0"))
+            self.ins_append(_Jump(destination_label, f"equal {right} 0"))
         elif cmp == "nor":
-            failed_label = self.Label("one_is_true")
-            self.ins_append(
-                f"jump {failed_label} notEqual {left} 0 "
-            )
-            self.ins_append(
-                f"jump {destination_label} Equal {right} 0 "
-            )
+            failed_label = _Label()
+            self.ins_append(_Jump(failed_label, f"notEqual {left} 0"))
+            self.ins_append(_Jump(destination_label, f"equal {right} 0"))
             self.ins_append(failed_label)
         else:
-            self.ins_append(f"jump {destination_label} {cmp} {left} {right}")
+            self.ins_append(_Jump(destination_label, f"{cmp} {left} {right}"))
 
     def visit_If(self, node):
-        endif_label = self.Label(
-            "endif"
-        )
-        if_false_label = (
-            self.Label("else") if node.orelse else endif_label
-        )
-        self.conditional_jump(
-            if_false_label, node.test, jump_if_test=False
-        )
+        endif_label = _Label()
+        if_false_label = _Label() if node.orelse else endif_label
+        self.conditional_jump(if_false_label, node.test, jump_if_test=False)
         for subnode in node.body:
             self.visit(subnode)
         if node.orelse:
-            self.ins_append(
-                f"jump {endif_label} always"
-            )
+            self.ins_append(_Jump(endif_label, "always"))
             self.ins_append(if_false_label)
             for subnode in node.orelse:
                 self.visit(subnode)
@@ -248,17 +255,13 @@ class Compiler(ast.NodeVisitor):
 
     def visit_While(self, node):
         """This will be called for any* while loop."""
-        body_label = self.Label("while_body")
-        end_label = self.Label("while_end")
-        self.conditional_jump(
-            end_label, node.test, jump_if_test=False
-        )
+        body_label = _Label()
+        end_label = _Label()
+        self.conditional_jump(end_label, node.test, jump_if_test=False)
         self.ins_append(body_label)
         for subnode in node.body:
             self.visit(subnode)
-        self.conditional_jump(
-            body_label, node.test, jump_if_test=True
-        )
+        self.conditional_jump(body_label, node.test, jump_if_test=True)
         self.ins_append(end_label)
 
     def visit_For(self, node):
@@ -297,16 +300,18 @@ class Compiler(ast.NodeVisitor):
 
         self.ins_append(f"set {it} {start}")
 
-        self.ins_append(f"jump {{}} greaterThanEq {it} {end}")
-        condition = len(self._ins) - 1
+        end_label = _Label()
+        self.ins_append(_Jump(end_label, f"greaterThanEq {it} {end}"))
+        condition = _Label()
+        self.ins_append(condition)
 
         self._ins.extend(inject)
         for subnode in node.body:
             self.visit(subnode)
 
         self.ins_append(f"op add {it} {it} {step}")
-        self.ins_append(f"jump {condition} always")
-        self._ins[condition] = self._ins[condition].format(len(self._ins))
+        self.ins_append(_Jump(condition, "always"))
+        self.ins_append(end_label)
 
     def visit_FunctionDef(self, node):
         # TODO forbid recursion (or implement it by storing and restoring everything from stack)
@@ -552,9 +557,7 @@ class Compiler(ast.NodeVisitor):
             elif isinstance(node.value, (int, float)):
                 return str(node.value)
             elif isinstance(node.value, str):
-                return (
-                    '"' + "".join(c for c in node.value if c >= " " and c != '"') + '"'
-                )
+                return '"' + "".join(c for c in node.value if c >= " " and c != '"') + '"'
             else:
                 raise CompilerError(ERR_COMPLEX_VALUE, node)
         elif isinstance(node, ast.Name):
@@ -592,9 +595,7 @@ class Compiler(ast.NodeVisitor):
 
     def generate_masm(self):
         n = 0
-        labels_to_linenumbers = (
-            {}
-        )
+        labels_to_linenumbers = {}
         for i in self._ins:
             if not i and i.label:
                 labels_to_linenumbers[i.label.name] = n
