@@ -15,6 +15,9 @@ class Function:
 
 class CompilerError(ValueError):
     def __init__(self, code, node: ast.AST):
+        if node is None:
+            node = ast.Module(lineno=0, col_offset=0)  # dummy value
+
         super().__init__(f"[{code}/{node.lineno}:{node.col_offset}] {ERROR_DESCRIPTIONS[code]}")
 
 
@@ -63,7 +66,7 @@ class Compiler(ast.NodeVisitor):
         elif isinstance(code, str):
             body = ast.parse(code).body
         else:
-            raise CompilerError(ERR_INVALID_SOURCE, ast.Module(lineno=0, col_offset=0))
+            raise CompilerError(ERR_INVALID_SOURCE, None)
 
         for node in body:
             self.visit(node)
@@ -519,6 +522,6 @@ class Compiler(ast.NodeVisitor):
 
     def generate_masm(self):
         if len(self._ins) + 1 > MAX_INSTRUCTIONS:
-            raise CompilerError(ERR_TOO_LONG, ast.Module(lineno=0, col_offset=0))
+            raise CompilerError(ERR_TOO_LONG, None)
 
         return "\n".join(self._ins) + "\nend\n"

@@ -143,7 +143,7 @@ def test_no_compile_method():
     class Foo:
         def bar(self):
             pass
-    
+
     foo = Foo()
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_INVALID_SOURCE):
