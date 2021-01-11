@@ -1,5 +1,7 @@
 from .constants import *
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable, Union
 import ast
 import inspect
 import sys
@@ -104,7 +106,7 @@ class Compiler(ast.NodeVisitor):
             ins = _Instruction(ins)
         self._ins.append(ins)
 
-    def compile(self, code):
+    def compile(self, code: Union[str, Callable, Path]):
         if inspect.isfunction(code):
             code = textwrap.dedent(inspect.getsource(code))
             # i.e. `tree.body_of_tree[def].body_of_function`
@@ -118,6 +120,9 @@ class Compiler(ast.NodeVisitor):
                 body = body[1:]
         elif isinstance(code, str):
             body = _parse_code(code).body
+        elif isinstance(code, Path):
+            with code.open("r", encoding="utf-8") as fd:
+                body = _parse_code(fd.read()).body
         else:
             raise CompilerError(ERR_INVALID_SOURCE, None)
 
