@@ -605,4 +605,4 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_TOO_LONG, ast.Module(lineno=0, col_offset=0))
 
         # Final output is all instructions ignoring labels
-        return "\n".join(str(i) for i in self._ins if not isinstance(i, _Label))
+        return "\n".join(str(i) for i in self._ins if not isinstance(i, _Label)) + "\nend\n"
