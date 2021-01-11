@@ -47,6 +47,80 @@ class Vector:
 
     #TODO include dummy interface definitions for other vectorized overloaded operations
 
+class SensableAttribute:
+    """This is an attribute of some unit/block that can be read by an mlog sensor.
+       In Pyndustric these can be referred to via object.attribute, e.g. vault1.copper or Unit.shooting.
+       In Pyndustric, SensableAttribute names mirror those in Mindustry mlog, *except* Python does not
+       use the leading @, and hyphens are transformed to underscores, e.g., @phase-fabric becomes .phase_fabric"""
+
+class SensableObject(Vector):
+    """This umbrella class can represent any block or unit that mlog sensor instructions can read attributes from.
+       This is a subclass of Vector since all such objects have x,y locations that can participate in vectorized
+       computations.  In Pyndustric, attributes of a SensableObject may be accessed as .attributes,
+       e.g., vault1.copper or Unit.shooting """
+
+    # TODO determine if any of the following attributes are unit-only or block-only, and if so move to subclass
+    copper: SensableAttribute #  '@copper',
+    lead: SensableAttribute #  '@lead',
+    coal: SensableAttribute #  '@coal',
+    graphite: SensableAttribute #  '@graphite',
+    titanium: SensableAttribute #  '@titanium',
+    thorium: SensableAttribute #  '@thorium',
+    silicon: SensableAttribute #  '@silicon',
+    plastanium: SensableAttribute #  '@plastanium',
+    phase_fabric: SensableAttribute #  '@phase-fabric',
+    surge_alloy: SensableAttribute #  '@surge-alloy',
+    spore_pod: SensableAttribute #  '@spore-pod',
+    sand: SensableAttribute #  '@sand',
+    blast_compound: SensableAttribute #  '@blast-compound',
+    pyratite: SensableAttribute #  '@pyratite',
+    metaglass: SensableAttribute #  '@metaglass',
+    scrap: SensableAttribute #  '@scrap',
+    water: SensableAttribute #  '@water',
+    slag: SensableAttribute #  '@slag',
+    oil: SensableAttribute #  '@oil',
+    cryofluid: SensableAttribute #  '@cryofluid',
+    totalItems: SensableAttribute #  '@totalItems',
+    firstItem: SensableAttribute #  '@firstItem',
+    totalLiquids: SensableAttribute #  '@totalLiquids',
+    totalPower: SensableAttribute #  '@totalPower',
+    itemCapacity: SensableAttribute #  '@itemCapacity',
+    liquidCapacity: SensableAttribute #  '@liquidCapacity',
+    powerCapacity: SensableAttribute #  '@powerCapacity',
+    powerNetStored: SensableAttribute #  '@powerNetStored',
+    powerNetCapacity: SensableAttribute #  '@powerNetCapacity',
+    powerNetIn: SensableAttribute #  '@powerNetIn',
+    powerNetOut: SensableAttribute #  '@powerNetOut',
+    ammo: SensableAttribute #  '@ammo',
+    ammoCapacity: SensableAttribute #  '@ammoCapacity',
+    health: SensableAttribute #  '@health',
+    maxHealth: SensableAttribute #  '@maxHealth',
+    heat: SensableAttribute #  '@heat',
+    efficiency: SensableAttribute #  '@efficiency',
+    rotation: SensableAttribute #  '@rotation',
+    x: SensableAttribute #  '@x',   # should vectorize!
+    y: SensableAttribute #  '@y',
+    shootX: SensableAttribute #  '@shootX',   # should vectorize!
+    shootY: SensableAttribute #  '@shootY',
+    shooting: SensableAttribute #  '@shooting',
+    mineX: SensableAttribute #  '@mineX', # should vectorize!
+    mineY: SensableAttribute #  '@mineY',
+    mining: SensableAttribute #  '@mining',
+    team: SensableAttribute #  '@team',
+    type: SensableAttribute #  '@type',
+    flag: SensableAttribute #  '@flag',
+    controlled: SensableAttribute #  '@controlled',
+    commanded: SensableAttribute #  '@commanded',
+    name: SensableAttribute #  '@name',
+    config: SensableAttribute #  '@config',
+    payload: SensableAttribute #  '@payloadCount',
+    payloadType: SensableAttribute #  '@payloadType',
+    enabled: SensableAttribute #  '@enabled',  # could treat as settable property?
+
+    pos: Vector      # [@x , @y]
+    shootPos: Vector # [@shootX, @shootY]
+    minePos: Vector  # [@mineX, @mineY]
+
 
 class UnitType( Vector ):
     """This is used to represent any type of mindustry unit, e.g. manufactured units like mono or poly,
@@ -88,13 +162,14 @@ class BoundUnit( AnyUnit ):
 Unit = BoundUnit()  # Pyndustric programs will refer mlog's @unit as Unit
 
 
-
-class Block(Vector):
-    pass
-
-class MemoryBlock(Block):
-    def __getitem__(self, index): pass
-    def __setitem__(self, index, value): pass
+class Block(SensableObject):
+    """This represents a block located somewhere on the map, e.g., a turret, vault, memory processor, or conveyer belt.
+       If your processor will be linked to blocks, like vault1 or ripple1, it is recommended that you declare these
+       as arguments of type : Block for the function that you want to compile to be the mlog code for that processor.
+       Blocks can also be found using TODO the following mlog functions
+       In Pyndustric, attributes of a block may be accessed as .attributes,  e.g., vault1.copper """
+    def __getitem__(self, index): pass         # You can read a slot of a memory block, e.g., with memory1[0]
+    def __setitem__(self, index, value): pass  # You can write to a slot of a memory block, e.g., with memory1[0]=1
 
 # ------------------------
 

@@ -96,7 +96,7 @@ RES_MAP = {
     'thorium': '@thorium',
     'silicon': '@silicon',
     'plastanium': '@plastanium',
-    'phase_fabrix': '@phase-fabric',
+    'phase_fabric': '@phase-fabric',
     'surge_alloy': '@surge-alloy',
     'spore_pod': '@spore-pod',
     'sand': '@sand',

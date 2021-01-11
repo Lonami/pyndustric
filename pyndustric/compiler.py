@@ -154,78 +154,90 @@ class Compiler(ast.NodeVisitor):
     def visit_Assign(self, node: ast.Assign):
         """This will be called for any* statement of the form "{targets} = {values}"
         """
-        if len(node.targets) != 1:
-            raise CompilerError(ERR_MULTI_ASSIGN, node)
-            # TODO some multi-assignment may as well be allowed, e.g., x,y = 30,50 should be fine, as should x=y=0
-            #      x,y = 30,50 makes targets[0] be the tuple (x,y), whereas x=y=0 makes targets[0]=x, targets[1]=y
-
-        target = node.targets[0]
+        target = node.targets[0] # the variable we'll assign a value to, e.g., the x in "x = 1"
         if not isinstance(target, ast.Name):
             raise CompilerError(ERR_COMPLEX_ASSIGN, node)
-            # TODO Make sure this is the right error to raise?  Won't this often be triggered e.g., by things like
-            #      "12 = x"? where the left-hand-side isn't a name?  This isn't "complex" assignment, just not the
-            #      right sort of target to assign values to!
+            # TODO This rules out x,y = 30,50 (for which targets[0] will be the tuple (x,y) )  May want to support that?
+            # TODO Take care with how this will interact with vectorized operations
 
-        value = node.value  # The value on the right-hand-side of the =
-        # TODO: This should probably be consolidated together with other instances where expressions may be encountered
-        if isinstance(value, ast.BinOp):  # if expression is a binary operation, e.g., a+b
-            op = BIN_OPS.get(type(value.op)) # look up equivalent op in dict of mlog binary ops, or None if not there
+        self.create_Assign( target.id, node.value ) # Create instruction(s) to set target = value
+
+        if len(node.targets) > 1: # if this was a multi-assignment like x = y = 0
+            # TODO ERR_MULTI_ASSIGN was raised here, but now this compiles fine. Could delete this error + its test.
+            for additional_target in node.targets[1:]:
+                self.ins_append(f"set {additional_target.id} {target.id}") # set the later targets to mimic first
+
+    def create_Assign(self, variable: str, newvalue: ast.AST):
+        """Appends one or more Instructions to assign to variable the value specified in AST node newvalue.
+           This is used to compile explicit assignment to a user-specified variable, and also to assign values
+           to dummy variables to store intermediate results in complex expressions."""
+
+        print(f"\nCreating assignment instruction(s) for {variable} = {ast.dump(newvalue)}")
+
+        if isinstance(newvalue, ast.BinOp):  # if expression is a binary operation, e.g., a+b
+            op = BIN_OPS.get(type(newvalue.op)) # look up equivalent op in dict of mlog binary ops, or None if not there
             if op is None:
                 raise CompilerError(ERR_UNSUPPORTED_OP, node)
 
-            left = self.as_value(value.left)
-            right = self.as_value(value.right)
-            self.ins_append(f'op {op} {target.id} {left} {right}') # e.g. "x=y+z" compiles to "op add x y z"
-            #TODO if this is to be generalized to handle expressions wherever they might occur, this will need to
-            #     be changed, e.g., to allow replacing target.id with an intermediate dummy variable
+            left = self.as_value(newvalue.left)
+            right = self.as_value(newvalue.right)
+            self.ins_append(f'op {op} {variable} {left} {right}') # e.g. "x=y+z" compiles to "op add x y z"
 
-        elif isinstance(value, ast.Compare):  # if expression is a binary comparison, e.g., a<b
-            if len(value.ops) != 1 or len(value.comparators) != 1:
+        elif isinstance(newvalue, ast.Compare):  # if expression is a binary comparison, e.g., a<b
+            if len(newvalue.ops) != 1 or len(newvalue.comparators) != 1:
                 raise CompilerError(ERR_UNSUPPORTED_EXPR)
             #TODO not sure what exactly is being ruled out here? things like a<b<c?  Could be good to support those.
 
-            cmp = BIN_CMP.get(type(value.ops[0])) # look up the mlog equivalent of this python comparison, or None
+            cmp = BIN_CMP.get(type(newvalue.ops[0])) # look up the mlog equivalent of this python comparison, or None
             if cmp is None:
-                raise CompilerError(ERR_UNSUPPORTED_OP, value)
+                raise CompilerError(ERR_UNSUPPORTED_OP, newvalue)
 
-            left = self.as_value(value.left)
-            right = self.as_value(value.comparators[0])
-            self.ins_append(f'op {cmp} {target.id} {left} {right}') # e.g. "x = y<z" compiles to "op lessThan x y z"
+            left = self.as_value(newvalue.left)
+            right = self.as_value(newvalue.comparators[0])
+            self.ins_append(f'op {cmp} {variable} {left} {right}') # e.g. "x = y<z" compiles to "op lessThan x y z"
 
             #TODO again needs to be generalized to handle expressions in other contexts
             #TODO there's no reason to keep this separate from the preceding case, given how closely parallel they are
 
-        elif isinstance(value, ast.Call) \
-                and isinstance(value.func, ast.Attribute) \
-                and value.func.value.id == 'Sensor':  # if this node is of the form Sensor.attr( args )
-            if len(value.args) != 1:
+        elif isinstance(newvalue, ast.Call) \
+                and isinstance(newvalue.func, ast.Attribute) \
+                and newvalue.func.value.id == 'Sensor':  # if this node is of the form Sensor.attr( args )
+            if len(newvalue.args) != 1:
                 raise CompilerError(ERR_ARGC_MISMATCH, node)
 
-            arg = value.args[0].id
+            arg = newvalue.args[0].id
 
-            attr = RES_MAP.get(value.func.attr)
+            attr = RES_MAP.get(newvalue.func.attr)
             if attr is None:
                 raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
-            self.ins_append(f'sensor {target.id} {arg} {attr}') # "x=Sensor.copper(vault1)"->"sensor x vault1 @copper"
+            self.ins_append(f'sensor {variable} {arg} {attr}') # "x=Sensor.copper(vault1)"->"sensor x vault1 @copper"
 
-            # TODO offer "x = vault1.copper" as an alternative (or perhaps outright replacement) for this
-            # TODO again this would need to be generalized to handle expressions found in other contexts
+        # TODO determine where to handle any other object-attribute based calls, like Unit.approach() or salvo1.shoot()?
 
-        # TODO this is where we'd handle any other object-attribute based calls, like Unit.approach() or salvo1.shoot()
+        elif isinstance(newvalue, ast.Attribute): # e.g., vault1.copper
+            # We're dealing with an ast like this: newvalue = Attribute(value=Name(id='vault1'), attr='copper' )
+            # TODO may want to generate our own compiler errors for type mismatches
+            obj  = newvalue.value.id # e.g. vault1
+            attr:str  = newvalue.attr # e.g. copper
 
-        else:  # for anything else of the form "x = value"
-            val = self.as_value(value)  # as_value() tries to coerce value to be some val that mlog can assign to x
-            self.ins_append(f'set {target.id} {val}')  # and compile this to "set x val"
+            # TODO vectorize operations on vector attributes .pos .shootPos and .minePos
+            # TODO screen other idiomatic object.attribute references that shouldn't compile to sensor instructions?
+
+            mlog_attr = '@'+attr.replace('_','-') # e.g. "phase_fabric" --> "@phase-fabric"
+            self.ins_append(f'sensor {variable} {obj} {mlog_attr}') # "x = vault1.copper"->"sensor x vault1 @copper"
+
+        else:  # for any other value
+            val = self.as_value(newvalue)  # as_value() tries to coerce value to be some val that mlog can assign to x
+            self.ins_append(f'set {variable} {val}')  # and compile this to "set x val"
 
             #TODO need to rethink the division of labor between as_value and a generalized expression handler
 
-    def visit_AugAssign(self, node: ast.Assign):  # This handles "augmenting assignments" like "x += 1"
+    def visit_AugAssign(self, node: ast.Assign):
         """This will be called for any* augmenting assignment statement, like "x += 1"  """
-        target = node.target
+        target = node.target # e.g., x in "x += 1"
         if not isinstance(target, ast.Name):
             raise CompilerError(ERR_COMPLEX_ASSIGN, node)
-            # TODO again this isn't the right error.  The problem with 12 += 1 isn't that it's *complex*, it's that 12 isn't the right sort of thing to increment!
 
         op = BIN_OPS.get(type(node.op))
         if op is None:
@@ -233,7 +245,6 @@ class Compiler(ast.NodeVisitor):
 
         right = self.as_value(node.value)
         self.ins_append(f'op {op} {target.id} {target.id} {right}')
-        # TODO this closely parallels treatment of x = x + 1, and of x = y < 1, so likely should be merged with them
         # TODO this needs to allow for complex expressions on the right-hand side
 
     def conditional_jump(self, destination_label, test, jump_if_test = True):

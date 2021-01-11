@@ -170,6 +170,19 @@ def test_assignments():
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
+def test_multi_assignment():
+    def source():
+        x = y = z = 0
+
+    expected = as_masm('''\
+        set x 0
+        set y x
+        set z x
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
 
 def test_types():
     source = textwrap.dedent('''\
@@ -585,11 +598,22 @@ def test_env():
 
 def test_sensor():
     source = textwrap.dedent('''\
-        copper = Sensor.copper(container1)
+        pf = Sensor.phase_fabric(container1)
         ''')
 
     expected = as_masm('''\
-        sensor copper container1 @copper
+        sensor pf container1 @phase-fabric
+        ''')
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+def test_object_attribute():
+    def source(container1):
+        pf = container1.phase_fabric
+
+    expected = as_masm('''\
+        sensor pf container1 @phase-fabric
         ''')
 
     masm = pyndustric.Compiler().compile(source)
