@@ -22,11 +22,6 @@ def test_all_err_have_desc_and_tests():
         assert name in source, "error is missing a test"
 
 
-def test_err_multi_assign():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_MULTI_ASSIGN):
-        pyndustric.Compiler().compile("a = b = 1")
-
-
 def test_err_complex_assign():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_ASSIGN):
         pyndustric.Compiler().compile("a, b = 1, 2")
@@ -185,6 +180,22 @@ def test_assignments():
         set x 1
         op add y x 2
         op equal z x y
+        """
+    )
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
+def test_multi_assignment():
+    def source():
+        x = y = z = 0
+
+    expected = as_masm(
+        """\
+        set x 0
+        set y x
+        set z x
         """
     )
 
@@ -593,13 +604,27 @@ def test_env():
 def test_sensor():
     source = textwrap.dedent(
         """\
-        copper = Sensor.copper(container1)
+        pf = Sensor.phase_fabric(container1)
         """
     )
 
     expected = as_masm(
         """\
-        sensor copper container1 @copper
+        sensor pf container1 @phase-fabric
+        """
+    )
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
+def test_object_attribute():
+    def source(container1):
+        pf = container1.phase_fabric
+
+    expected = as_masm(
+        """\
+        sensor pf container1 @phase-fabric
         """
     )
 

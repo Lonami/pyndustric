@@ -86,22 +86,26 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_UNSUPPORTED_IMPORT, node)
 
     def visit_Assign(self, node: ast.Assign):
-        if len(node.targets) != 1:
-            raise CompilerError(ERR_MULTI_ASSIGN, node)
-
         target = node.targets[0]
         if not isinstance(target, ast.Name):
             raise CompilerError(ERR_COMPLEX_ASSIGN, node)
 
-        value = node.value
+        self.insert_assign_ins(target.id, node.value)
+
+        if len(node.targets) > 1:
+            for additional_target in node.targets[1:]:
+                self._ins.append(f"set {additional_target.id} {target.id}")
+
+    def insert_assign_ins(self, variable: str, value: ast.AST):
         if isinstance(value, ast.BinOp):
             op = BIN_OPS.get(type(value.op))
             if op is None:
-                raise CompilerError(ERR_UNSUPPORTED_OP, node)
+                raise CompilerError(ERR_UNSUPPORTED_OP, value)
 
             left = self.as_value(value.left)
             right = self.as_value(value.right)
-            self._ins.append(f"op {op} {target.id} {left} {right}")
+            self._ins.append(f"op {op} {variable} {left} {right}")
+
         elif isinstance(value, ast.Compare):
             if len(value.ops) != 1 or len(value.comparators) != 1:
                 raise CompilerError(ERR_UNSUPPORTED_EXPR)
@@ -112,28 +116,37 @@ class Compiler(ast.NodeVisitor):
 
             left = self.as_value(value.left)
             right = self.as_value(value.comparators[0])
-            self._ins.append(f"op {cmp} {target.id} {left} {right}")
+            self._ins.append(f"op {cmp} {variable} {left} {right}")
+
         elif (
             isinstance(value, ast.Call)
             and isinstance(value.func, ast.Attribute)
             and value.func.value.id == "Sensor"
         ):
             if len(value.args) != 1:
-                raise CompilerError(ERR_ARGC_MISMATCH, node)
+                raise CompilerError(ERR_ARGC_MISMATCH, value)
 
             arg = value.args[0].id
 
             attr = RES_MAP.get(value.func.attr)
             if attr is None:
-                raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+                raise CompilerError(ERR_UNSUPPORTED_SYSCALL, value)
 
-            self._ins.append(f"sensor {target.id} {arg} {attr}")
+            self._ins.append(f"sensor {variable} {arg} {attr}")
+
+        elif isinstance(value, ast.Attribute):
+            obj = value.value.id
+            attr = value.attr
+
+            mlog_attr = "@" + attr.replace("_", "-")
+            self._ins.append(f"sensor {variable} {obj} {mlog_attr}")
+
         else:
             val = self.as_value(value)
-            self._ins.append(f"set {target.id} {val}")
+            self._ins.append(f"set {variable} {val}")
 
     def visit_AugAssign(self, node: ast.Assign):
-        target = node.target
+        target = node.target  # e.g., x in "x += 1"
         if not isinstance(target, ast.Name):
             raise CompilerError(ERR_COMPLEX_ASSIGN, node)
 

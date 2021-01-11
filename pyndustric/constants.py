@@ -1,6 +1,5 @@
 import ast
 
-ERR_MULTI_ASSIGN = "E001"
 ERR_COMPLEX_ASSIGN = "E002"
 ERR_COMPLEX_VALUE = "E003"
 ERR_UNSUPPORTED_OP = "E004"
@@ -19,7 +18,6 @@ ERR_TOO_LONG = "E016"
 ERR_INVALID_SOURCE = "E017"
 
 ERROR_DESCRIPTIONS = {
-    ERR_MULTI_ASSIGN: "can only assign to 1 target",
     ERR_COMPLEX_ASSIGN: "cannot perform complex assignment",
     ERR_COMPLEX_VALUE: "cannot evaluate complex value",
     ERR_UNSUPPORTED_OP: "unsupported operation",
@@ -83,7 +81,7 @@ RES_MAP = {
     "thorium": "@thorium",
     "silicon": "@silicon",
     "plastanium": "@plastanium",
-    "phase_fabrix": "@phase-fabric",
+    "phase_fabric": "@phase-fabric",
     "surge_alloy": "@surge-alloy",
     "spore_pod": "@spore-pod",
     "sand": "@sand",
