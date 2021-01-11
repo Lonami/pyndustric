@@ -593,19 +593,16 @@ class Compiler(ast.NodeVisitor):
         return var
 
     def generate_masm(self):
-        n = 0
-        labels_to_linenumbers = {}
-        for i in self._ins:
-            if not i and i.label:
-                labels_to_linenumbers[i.label.name] = n
-            if i:
-                n += 1
+        # Fill labels' line numbers
+        lineno = 0
+        for ins in self._ins:
+            if isinstance(ins, _Label):
+                ins._lineno = lineno
+            else:
+                lineno += 1
 
-        if n > MAX_INSTRUCTIONS:
+        if lineno > MAX_INSTRUCTIONS:
             raise CompilerError(ERR_TOO_LONG, ast.Module(lineno=0, col_offset=0))
 
-        masm_with_labels = "\n".join(i for i in self._ins if i)
-
-        masm_with_linenumbers = masm_with_labels.format_map(labels_to_linenumbers)
-
-        return masm_with_linenumbers
+        # Final output is all instructions ignoring labels
+        return "\n".join(str(i) for i in self._ins if not isinstance(i, _Label))
