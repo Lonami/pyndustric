@@ -1,8 +1,10 @@
 import ast
 import sys
 from dataclasses import dataclass
+from collections import Counter
 from .constants import *
-
+import inspect
+import textwrap
 
 @dataclass
 class Function:
@@ -46,7 +48,19 @@ class Compiler(ast.NodeVisitor):
         self._functions = {}
 
     def compile(self, code):
-        self.visit(ast.parse(code))
+        if callable(code):
+            code = textwrap.dedent(inspect.getsource(code))
+            body = ast.parse(code).body[0].body # i.e., tree.body_of_tree[0th stmt, namely "def..."].body_of_function
+            if ( isinstance( body[0], ast.Expr ) and
+                 isinstance( body[0].value, ast.Constant ) and
+                 isinstance( body[0].value.value, str) ):
+                body = body[1:] # if zeroth statement in function body is a docstring, bypass it
+        else:
+            body = ast.parse(code).body
+
+        for node in body:
+            self.visit(node)
+
         return self.generate_masm()
 
     def visit(self, node):
