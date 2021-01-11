@@ -302,9 +302,9 @@ class Compiler(ast.NodeVisitor):
         self.ins_append(f"set {it} {start}")
 
         end_label = _Label()
-        self.ins_append(_Jump(end_label, f"greaterThanEq {it} {end}"))
         condition = _Label()
         self.ins_append(condition)
+        self.ins_append(_Jump(end_label, f"greaterThanEq {it} {end}"))
 
         self._ins.extend(inject)
         for subnode in node.body:
