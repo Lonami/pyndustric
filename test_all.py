@@ -139,6 +139,17 @@ def test_err_too_long():
         pyndustric.Compiler().compile("x = 1\n" * (1 + pyndustric.MAX_INSTRUCTIONS))
 
 
+def test_no_compile_method():
+    class Foo:
+        def bar(self):
+            pass
+    
+    foo = Foo()
+
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_INVALID_SOURCE):
+        pyndustric.Compiler().compile(foo.bar)
+
+
 def test_compile_function():
     def source():
         """Skip me!"""

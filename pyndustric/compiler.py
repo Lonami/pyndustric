@@ -49,7 +49,7 @@ class Compiler(ast.NodeVisitor):
         self._functions = {}
 
     def compile(self, code):
-        if callable(code):
+        if inspect.isfunction(code):
             code = textwrap.dedent(inspect.getsource(code))
             # i.e. `tree.body_of_tree[def].body_of_function`
             body = ast.parse(code).body[0].body
@@ -60,8 +60,10 @@ class Compiler(ast.NodeVisitor):
             ):
                 # Skip doc-string
                 body = body[1:]
-        else:
+        elif isinstance(code, str):
             body = ast.parse(code).body
+        else:
+            raise CompilerError(ERR_INVALID_SOURCE, ast.Module(lineno=0, col_offset=0))
 
         for node in body:
             self.visit(node)

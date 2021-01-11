@@ -16,6 +16,7 @@ ERR_REDEF = "E013"
 ERR_NO_DEF = "E014"
 ERR_ARGC_MISMATCH = "E015"
 ERR_TOO_LONG = "E016"
+ERR_INVALID_SOURCE = 'E017'
 
 ERROR_DESCRIPTIONS = {
     ERR_MULTI_ASSIGN: "can only assign to 1 target",
@@ -34,6 +35,7 @@ ERROR_DESCRIPTIONS = {
     ERR_NO_DEF: "function has not been defined",
     ERR_ARGC_MISMATCH: "different number of arguments used in function call from function definition",
     ERR_TOO_LONG: "the program is too long to fit in a logic processor",
+    ERR_INVALID_SOURCE: "the provided source type to compile is not supported",
 }
 
 BIN_CMP = {
