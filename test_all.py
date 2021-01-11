@@ -438,11 +438,11 @@ def test_def():
         read __pyc_rc_0 cell1 __pyc_sp
         op sub __pyc_sp __pyc_sp 1
         read n cell1 __pyc_sp
-        jump 9 lessThan n 10
-        set __pyc_ret false
-        jump 11 always
-        jump 11 always
+        jump 9 greaterThanEq n 10
         set __pyc_ret true
+        jump 11 always
+        jump 11 always
+        set __pyc_ret false
         jump 11 always
         op add @counter __pyc_rc_0 1
         write 5 cell1 __pyc_sp
