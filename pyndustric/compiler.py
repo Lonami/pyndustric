@@ -43,6 +43,10 @@ else:
         pass
 
 
+def _parse_code(code: str):
+    return CompatTransformer().visit(ast.parse(code))
+
+
 class Compiler(ast.NodeVisitor):
     def __init__(self):
         self._ins = [
@@ -55,7 +59,7 @@ class Compiler(ast.NodeVisitor):
         if inspect.isfunction(code):
             code = textwrap.dedent(inspect.getsource(code))
             # i.e. `tree.body_of_tree[def].body_of_function`
-            body = ast.parse(code).body[0].body
+            body = _parse_code(code).body[0].body
             if (
                 isinstance(body[0], ast.Expr)
                 and isinstance(body[0].value, ast.Constant)
@@ -64,7 +68,7 @@ class Compiler(ast.NodeVisitor):
                 # Skip doc-string
                 body = body[1:]
         elif isinstance(code, str):
-            body = ast.parse(code).body
+            body = _parse_code(code).body
         else:
             raise CompilerError(ERR_INVALID_SOURCE, None)
 
@@ -72,11 +76,6 @@ class Compiler(ast.NodeVisitor):
             self.visit(node)
 
         return self.generate_masm()
-
-    def visit(self, node):
-        compat = CompatTransformer()
-        compat_node = compat.visit(node)
-        super().visit(compat_node)
 
     def visit_Import(self, node):
         raise CompilerError(ERR_UNSUPPORTED_IMPORT, node)
