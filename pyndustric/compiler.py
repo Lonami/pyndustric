@@ -29,7 +29,7 @@ class _Label(_Instruction):
 
     def __str__(self):
         assert self._lineno is not None, "internal compiler error: lineno should be set"
-        return self._lineno
+        return str(self._lineno)
 
 
 class _Jump(_Instruction):
