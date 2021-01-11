@@ -139,17 +139,16 @@ def test_err_too_long():
         pyndustric.Compiler().compile("x = 1\n" * (1 + pyndustric.MAX_INSTRUCTIONS))
 
 
-def test_inspect_function_source():
-    """Test that compile can accept a function as its argument.  That function's body will be compiled.
-       Note: the function must be one whose source code can be found by inspect.getsource, which looks for
-       at the current version of the file in which that function was originally defined."""
+def test_compile_function():
     def source():
-        """Doc string can be included for human readers, but will be ignored by compiler."""
+        """Skip me!"""
         x = 1
 
-    expected = as_masm('''\
+    expected = as_masm(
+        """\
         set x 1
-        ''')
+        """
+    )
 
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected

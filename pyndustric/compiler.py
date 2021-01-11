@@ -1,10 +1,11 @@
-import ast
-import sys
-from dataclasses import dataclass
-from collections import Counter
 from .constants import *
+from collections import Counter
+from dataclasses import dataclass
+import ast
 import inspect
+import sys
 import textwrap
+
 
 @dataclass
 class Function:
@@ -50,11 +51,15 @@ class Compiler(ast.NodeVisitor):
     def compile(self, code):
         if callable(code):
             code = textwrap.dedent(inspect.getsource(code))
-            body = ast.parse(code).body[0].body # i.e., tree.body_of_tree[0th stmt, namely "def..."].body_of_function
-            if ( isinstance( body[0], ast.Expr ) and
-                 isinstance( body[0].value, ast.Constant ) and
-                 isinstance( body[0].value.value, str) ):
-                body = body[1:] # if zeroth statement in function body is a docstring, bypass it
+            # i.e. `tree.body_of_tree[def].body_of_function`
+            body = ast.parse(code).body[0].body
+            if (
+                isinstance(body[0], ast.Expr)
+                and isinstance(body[0].value, ast.Constant)
+                and isinstance(body[0].value.value, str)
+            ):
+                # Skip doc-string
+                body = body[1:]
         else:
             body = ast.parse(code).body
 
