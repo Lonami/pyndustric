@@ -73,6 +73,26 @@ BIN_OPS = {
     ast.BitXor: "xor",
 }
 
+BUILTIN_DEFS = {
+    "flip": 1,
+    "max": 2,
+    "min": 2,
+    "xor": 2,
+    "atan2": 2,
+    "dst": 2,
+    "noise": 2,
+    "abs": 1,
+    "log": 1,
+    "log10": 1,
+    "sin": 1,
+    "cos": 1,
+    "tan": 1,
+    "floor": 1,
+    "ceil": 1,
+    "sqrt": 1,
+    "rand": 1,
+}
+
 RADAR_ORDERS = {"min": "1", "True": "1", "1": "1", "max": "0", "False": "0", "0": "0"}
 
 ENV_TO_VAR = {

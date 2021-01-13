@@ -196,6 +196,23 @@ class Compiler(ast.NodeVisitor):
                 val = self.as_value(value)
                 self.ins_append(f"set {variable} {val}")
 
+        elif isinstance(value, ast.Call) and isinstance(value.func, ast.Name):
+            function = value.func.id
+            if function in BUILTIN_DEFS:
+                argc = BUILTIN_DEFS[function]
+                if len(value.args) != argc:
+                    raise CompilerError(ERR_ARGC_MISMATCH, node)
+
+                operands = " ".join(self.as_value(arg) for arg in value.args)
+                self.ins_append(f"op {function} {variable} {operands}")
+
+            elif function in self._functions:
+                val = self.as_value(value)
+                self.ins_append(f"set {variable} {val}")
+
+            else:
+                raise CompilerError(ERR_NO_DEF, value)
+
         elif isinstance(value, ast.Attribute):
             obj = value.value.id
             attr = value.attr

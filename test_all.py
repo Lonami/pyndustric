@@ -226,6 +226,22 @@ def test_types():
     assert masm == expected
 
 
+def test_builtin_defs():
+    def source():
+        a = abs(1)
+        lo = min(1, 2)
+
+    expected = as_masm(
+        """\
+        op abs a 1
+        op min lo 1 2
+        """
+    )
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
 def test_aug_assignments():
     source = textwrap.dedent(
         """\
