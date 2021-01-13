@@ -632,10 +632,12 @@ def test_object_attribute():
 def test_radar():
     def source(ripple1):
         u1 = Unit.radar(enemy, flying, order=max, key=distance)
+        u2 = ripple1.radar(ally, key=health)
 
     expected = as_masm(
         """\
         uradar enemy flying any distance @unit 0 u1
+        radar ally any any health ripple1 1 u2
         """
     )
 

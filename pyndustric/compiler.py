@@ -280,12 +280,14 @@ class Compiler(ast.NodeVisitor):
             if k.arg == "key":
                 key = self.as_value(k.value)
             elif k.arg == "order":
-                try:
-                    order = RADAR_ORDERS[self.as_value(k.value)]
-                except KeyError:
-                    raise CompilerError(ERR_UNSUPPORTED_EXPR, value)
+                order = RADAR_ORDERS[self.as_value(k.value)]
             else:
                 raise CompilerError(ERR_UNSUPPORTED_EXPR, value)
+
+        try:
+            order = RADAR_ORDERS[order]
+        except KeyError:
+            raise CompilerError(ERR_UNSUPPORTED_EXPR, value)
 
         self.ins_append(f"{radar} {criteria} {key} {obj} {order} {variable}")
 
