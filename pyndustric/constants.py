@@ -73,6 +73,8 @@ BIN_OPS = {
     ast.BitXor: "xor",
 }
 
+RADAR_ORDERS = {"min": "1", "True": "1", "1": "1", "max": "0", "False": "0", "0": "0"}
+
 ENV_TO_VAR = {
     "this": "@this",
     "x": "@thisx",

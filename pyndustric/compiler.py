@@ -170,21 +170,31 @@ class Compiler(ast.NodeVisitor):
             left = self.as_value(value.left)
             right = self.as_value(value.comparators[0])
             self.ins_append(f"op {cmp} {variable} {left} {right}")
-        elif (
-            isinstance(value, ast.Call)
-            and isinstance(value.func, ast.Attribute)
-            and value.func.value.id == "Sensor"
-        ):
-            if len(value.args) != 1:
-                raise CompilerError(ERR_ARGC_MISMATCH, value)
 
-            arg = value.args[0].id
+        elif isinstance(value, ast.Call) and isinstance(value.func, ast.Attribute):
+            obj = value.func.value.id
+            method = value.func.attr
+            if obj == "Unit":
+                if method == "radar":
+                    self.radar_instruction(variable, obj, value)
+                else:
+                    raise CompilerError(ERR_NO_DEF, value)
+            elif obj == "Sensor":
+                if len(value.args) != 1:
+                    raise CompilerError(ERR_ARGC_MISMATCH, value)
 
-            attr = RES_MAP.get(value.func.attr)
-            if attr is None:
-                raise CompilerError(ERR_UNSUPPORTED_SYSCALL, value)
+                arg = value.args[0].id
 
-            self.ins_append(f"sensor {variable} {arg} {attr}")
+                attr = RES_MAP.get(method)
+                if attr is None:
+                    raise CompilerError(ERR_UNSUPPORTED_SYSCALL, value)
+
+                self.ins_append(f"sensor {variable} {arg} {attr}")
+            elif method == "radar":
+                self.radar_instruction(variable, obj, value)
+            else:
+                val = self.as_value(value)
+                self.ins_append(f"set {variable} {val}")
 
         elif isinstance(value, ast.Attribute):
             obj = value.value.id
@@ -248,6 +258,36 @@ class Compiler(ast.NodeVisitor):
             self.ins_append(failed_label)
         else:
             self.ins_append(_Jump(destination_label, f"{cmp} {left} {right}"))
+
+    def radar_instruction(self, variable, obj, value):
+        if obj == "Unit":
+            radar = "uradar"
+            obj = "@unit"
+        else:
+            radar = "radar"
+
+        criteria = [arg.id for arg in value.args]
+        if len(criteria) > 3:
+            raise CompilerError(ERR_ARGC_MISMATCH, value)
+
+        while len(criteria) < 3:
+            criteria.append("any")
+
+        criteria = " ".join(criteria)
+        key = "distance"
+        order = "min"
+        for k in value.keywords:
+            if k.arg == "key":
+                key = self.as_value(k.value)
+            elif k.arg == "order":
+                try:
+                    order = RADAR_ORDERS[self.as_value(k.value)]
+                except KeyError:
+                    raise CompilerError(ERR_UNSUPPORTED_EXPR, value)
+            else:
+                raise CompilerError(ERR_UNSUPPORTED_EXPR, value)
+
+        self.ins_append(f"{radar} {criteria} {key} {obj} {order} {variable}")
 
     def visit_If(self, node):
         endif_label = _Label()

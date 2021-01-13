@@ -629,6 +629,25 @@ def test_object_attribute():
     assert masm == expected
 
 
+def test_radar():
+    def source(ripple1):
+        u1 = Unit.radar(enemy, flying, order=max, key=distance)
+
+    expected = as_masm(
+        """\
+        uradar enemy flying any distance @unit 0 u1
+        """
+    )
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
+def test_radar_too_many():
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_ARGC_MISMATCH):
+        pyndustric.Compiler().compile("u = Unit.radar(enemy, flying, ally, any)")
+
+
 def test_draw():
     source = textwrap.dedent(
         """\
