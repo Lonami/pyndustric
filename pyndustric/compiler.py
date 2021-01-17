@@ -576,7 +576,6 @@ class Compiler(ast.NodeVisitor):
 
         elif isinstance(node, ast.Name):
             # foo, bar
-            assert isinstance(node.ctx, ast.Load)
             return node.id
 
         elif isinstance(node, ast.Attribute):

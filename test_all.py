@@ -582,6 +582,7 @@ def test_complex_call():
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
+
 def test_def_sideeffects():
     source = textwrap.dedent(
         """\
