@@ -278,7 +278,6 @@ def test_complex_aug_assig():
 
 @masm_test
 def test_if():
-    # TODO negate initial jmp condition with no else
     """
     set x 1
     jump 4 equal x 0
@@ -401,7 +400,6 @@ def test_for_start_end_step():
 @masm_test
 def test_def():
     # TODO cells can't store strings, test that no fn args are
-    # TODO standalone calls are not supported
     """
     jump 12 always
     read __pyc_rc_0 cell1 __pyc_sp
