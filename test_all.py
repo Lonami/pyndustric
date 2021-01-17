@@ -32,12 +32,6 @@ def test_err_complex_assign():
 
 def test_err_complex_value():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_VALUE):
-        pyndustric.Compiler().compile("a = 1 + (2 + 3)")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_VALUE):
-        pyndustric.Compiler().compile("a += 1 + 2")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_VALUE):
         pyndustric.Compiler().compile("a = 1 + 2j")
 
 
@@ -242,6 +236,26 @@ def test_builtin_defs():
     assert masm == expected
 
 
+def test_complex_assign():
+    def source():
+        a = 2 * x + 1
+        d = sqrt(x * x + y * y)
+
+    expected = as_masm(
+        """\
+        op mul __pyc_tmp_1 2 x
+        op add a __pyc_tmp_1 1
+        op mul __pyc_tmp_6 x x
+        op mul __pyc_tmp_9 y y
+        op add __pyc_tmp_5 __pyc_tmp_6 __pyc_tmp_9
+        op sqrt d __pyc_tmp_5
+        """
+    )
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
 def test_aug_assignments():
     source = textwrap.dedent(
         """\
@@ -254,6 +268,27 @@ def test_aug_assignments():
         """\
         set x 1
         op add x x 1
+        """
+    )
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
+def test_complex_aug_assig():
+    source = textwrap.dedent(
+        """\
+        x = 1
+        x += (1 + 2) * 3
+        """
+    )
+
+    expected = as_masm(
+        """\
+        set x 1
+        op add __pyc_tmp_2 1 2
+        op mul __pyc_tmp_1 __pyc_tmp_2 3
+        op add x x __pyc_tmp_1
         """
     )
 
@@ -483,6 +518,70 @@ def test_def():
     assert masm == expected
 
 
+def test_multi_call():
+    def source():
+        def f(i):
+            return i
+
+        x = f(1) + f(2)
+
+    expected = as_masm(
+        """\
+        jump 8 always
+        read __pyc_rc_0 cell1 __pyc_sp
+        op sub __pyc_sp __pyc_sp 1
+        read i cell1 __pyc_sp
+        set __pyc_ret i
+        jump 7 always
+        op add @counter __pyc_rc_0 1
+        write 1 cell1 __pyc_sp
+        op add __pyc_sp __pyc_sp 1
+        write @counter cell1 __pyc_sp
+        jump 2 always
+        set __pyc_tmp_2 __pyc_ret
+        write 2 cell1 __pyc_sp
+        op add __pyc_sp __pyc_sp 1
+        write @counter cell1 __pyc_sp
+        jump 2 always
+        set __pyc_tmp_4 __pyc_ret
+        op add x __pyc_tmp_2 __pyc_tmp_4
+        """
+    )
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+
+def test_complex_call():
+    def source():
+        def f(i):
+            return i
+
+        x = 1 * f(2 + 3) + 4
+
+    expected = as_masm(
+        """\
+        jump 8 always
+        read __pyc_rc_0 cell1 __pyc_sp
+        op sub __pyc_sp __pyc_sp 1
+        read i cell1 __pyc_sp
+        set __pyc_ret i
+        jump 7 always
+        op add @counter __pyc_rc_0 1
+        op add __pyc_tmp_5 2 3
+        write __pyc_tmp_5 cell1 __pyc_sp
+        op add __pyc_sp __pyc_sp 1
+        write @counter cell1 __pyc_sp
+        jump 2 always
+        set __pyc_tmp_4 __pyc_ret
+        op mul __pyc_tmp_2 1 __pyc_tmp_4
+        op add x __pyc_tmp_2 4
+        """
+    )
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
 def test_def_sideeffects():
     source = textwrap.dedent(
         """\
@@ -493,6 +592,7 @@ def test_def_sideeffects():
         """
     )
 
+    # TODO detect this unnecessary use of __pyc_tmp_3 and optimize it away
     expected = as_masm(
         """\
         jump 6 always
@@ -502,6 +602,7 @@ def test_def_sideeffects():
         op add @counter __pyc_rc_0 1
         write @counter cell1 __pyc_sp
         jump 2 always
+        set __pyc_tmp_2 __pyc_ret
         """
     )
 
@@ -520,6 +621,7 @@ def test_def_call_as_call_arg():
         """
     )
 
+    # TODO detect this unnecessary use of __pyc_tmp_3 and optimize it away
     expected = as_masm(
         """\
         jump 9 always
@@ -534,7 +636,8 @@ def test_def_call_as_call_arg():
         op add __pyc_sp __pyc_sp 1
         write @counter cell1 __pyc_sp
         jump 2 always
-        write __pyc_ret cell1 __pyc_sp
+        set __pyc_tmp_3 __pyc_ret
+        write __pyc_tmp_3 cell1 __pyc_sp
         op add __pyc_sp __pyc_sp 1
         write @counter cell1 __pyc_sp
         jump 2 always

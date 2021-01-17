@@ -100,11 +100,16 @@ class Compiler(ast.NodeVisitor):
         self._in_def = None  # current function name
         self._epilogue = None  # current function's epilogue label
         self._functions = {}
+        self._tmp_var_counter = 0
 
     def ins_append(self, ins):
         if not isinstance(ins, _Instruction):
             ins = _Instruction(ins)
         self._ins.append(ins)
+
+    def _tmp_var_name(self):
+        self._tmp_var_counter += 1
+        return REG_TMP_FMT.format(self._tmp_var_counter)
 
     def compile(self, code: Union[str, Callable, Path]):
         if inspect.isfunction(code):
@@ -143,86 +148,13 @@ class Compiler(ast.NodeVisitor):
         if not isinstance(target, ast.Name):
             raise CompilerError(ERR_COMPLEX_ASSIGN, node)
 
-        self.insert_assign_ins(target.id, node.value)
+        output = self.as_value(node.value, target.id)
+        if output != target.id:
+            self.ins_append(f"set {target.id} {output}")
 
         if len(node.targets) > 1:
             for additional_target in node.targets[1:]:
                 self.ins_append(f"set {additional_target.id} {target.id}")
-
-    def insert_assign_ins(self, variable: str, value: ast.AST):
-        if isinstance(value, ast.BinOp):
-            op = BIN_OPS.get(type(value.op))
-            if op is None:
-                raise CompilerError(ERR_UNSUPPORTED_OP, value)
-
-            left = self.as_value(value.left)
-            right = self.as_value(value.right)
-            self.ins_append(f"op {op} {variable} {left} {right}")
-
-        elif isinstance(value, ast.Compare):
-            if len(value.ops) != 1 or len(value.comparators) != 1:
-                raise CompilerError(ERR_UNSUPPORTED_EXPR)
-
-            cmp = BIN_CMP.get(type(value.ops[0]))
-            if cmp is None:
-                raise CompilerError(ERR_UNSUPPORTED_OP, value)
-
-            left = self.as_value(value.left)
-            right = self.as_value(value.comparators[0])
-            self.ins_append(f"op {cmp} {variable} {left} {right}")
-
-        elif isinstance(value, ast.Call) and isinstance(value.func, ast.Attribute):
-            obj = value.func.value.id
-            method = value.func.attr
-            if obj == "Unit":
-                if method == "radar":
-                    self.radar_instruction(variable, obj, value)
-                else:
-                    raise CompilerError(ERR_NO_DEF, value)
-            elif obj == "Sensor":
-                if len(value.args) != 1:
-                    raise CompilerError(ERR_ARGC_MISMATCH, value)
-
-                arg = value.args[0].id
-
-                attr = RES_MAP.get(method)
-                if attr is None:
-                    raise CompilerError(ERR_UNSUPPORTED_SYSCALL, value)
-
-                self.ins_append(f"sensor {variable} {arg} {attr}")
-            elif method == "radar":
-                self.radar_instruction(variable, obj, value)
-            else:
-                val = self.as_value(value)
-                self.ins_append(f"set {variable} {val}")
-
-        elif isinstance(value, ast.Call) and isinstance(value.func, ast.Name):
-            function = value.func.id
-            if function in BUILTIN_DEFS:
-                argc = BUILTIN_DEFS[function]
-                if len(value.args) != argc:
-                    raise CompilerError(ERR_ARGC_MISMATCH, node)
-
-                operands = " ".join(self.as_value(arg) for arg in value.args)
-                self.ins_append(f"op {function} {variable} {operands}")
-
-            elif function in self._functions:
-                val = self.as_value(value)
-                self.ins_append(f"set {variable} {val}")
-
-            else:
-                raise CompilerError(ERR_NO_DEF, value)
-
-        elif isinstance(value, ast.Attribute):
-            obj = value.value.id
-            attr = value.attr
-
-            mlog_attr = "@" + attr.replace("_", "-")
-            self.ins_append(f"sensor {variable} {obj} {mlog_attr}")
-
-        else:
-            val = self.as_value(value)
-            self.ins_append(f"set {variable} {val}")
 
     def visit_AugAssign(self, node: ast.Assign):
         target = node.target  # e.g., x in "x += 1"
@@ -307,6 +239,7 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_UNSUPPORTED_EXPR, value)
 
         self.ins_append(f"{radar} {criteria} {key} {obj} {order} {variable}")
+        return variable
 
     def visit_If(self, node):
         endif_label = _Label()
@@ -620,8 +553,18 @@ class Compiler(ast.NodeVisitor):
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
-    def as_value(self, node):
+    def as_value(self, node, output: str = None):
+        """
+        Returns the string representing either a value (like a number) or a variable.
+
+        If a temporary variable needs to be created, it will be called `output`.
+        If `output` is not set, it will be a random name.
+        """
+        if output is None:
+            output = self._tmp_var_name()
+
         if isinstance(node, ast.Constant):
+            # true, 1.23, "string", 4j
             if isinstance(node.value, bool):
                 return ("false", "true")[node.value]
             elif isinstance(node.value, (int, float)):
@@ -630,38 +573,102 @@ class Compiler(ast.NodeVisitor):
                 return '"' + "".join(c for c in node.value if c >= " " and c != '"') + '"'
             else:
                 raise CompilerError(ERR_COMPLEX_VALUE, node)
+
         elif isinstance(node, ast.Name):
+            # foo, bar
             assert isinstance(node.ctx, ast.Load)
             return node.id
-        elif isinstance(node, ast.Call):
-            if isinstance(node.func, ast.Attribute):
-                if node.func.value.id == "Env":
-                    return self.env_as_value(node.func)
-                else:
-                    raise CompilerError(ERR_COMPLEX_VALUE, node)
-            fn = self._functions.get(node.func.id)
-            if fn is None:
-                raise CompilerError(ERR_NO_DEF, node)
 
-            if len(node.args) != fn.argc:
-                raise CompilerError(ERR_ARGC_MISMATCH, node)
+        elif isinstance(node, ast.Attribute):
+            # container1.copper
+            obj = node.value.id
+            attr = node.attr
 
-            for arg in node.args:
-                val = self.as_value(arg)
-                self.ins_append(f"write {val} cell1 {REG_STACK}")
-                self.ins_append(f"op add {REG_STACK} {REG_STACK} 1")
+            mlog_attr = "@" + attr.replace("_", "-")
+            self.ins_append(f"sensor {output} {obj} {mlog_attr}")
+            return output
 
-            self.ins_append(f"write @counter cell1 {REG_STACK}")
-            self.ins_append(_Jump(fn.start, "always"))
-            return REG_RET
-        else:
-            raise CompilerError(ERR_COMPLEX_VALUE, node)
+        if isinstance(node, ast.BinOp):
+            # 1 + 2
+            op = BIN_OPS.get(type(node.op))
+            if op is None:
+                raise CompilerError(ERR_UNSUPPORTED_OP, node)
 
-    def env_as_value(self, node):
-        var = ENV_TO_VAR.get(node.attr)
-        if var is None:
-            raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
-        return var
+            left = self.as_value(node.left)
+            right = self.as_value(node.right)
+            self.ins_append(f"op {op} {output} {left} {right}")
+            return output
+
+        elif isinstance(node, ast.Compare):
+            # 1 < 2
+            if len(node.ops) != 1 or len(node.comparators) != 1:
+                raise CompilerError(ERR_UNSUPPORTED_EXPR)
+
+            cmp = BIN_CMP.get(type(node.ops[0]))
+            if cmp is None:
+                raise CompilerError(ERR_UNSUPPORTED_OP, node)
+
+            left = self.as_value(node.left)
+            right = self.as_value(node.comparators[0])
+            self.ins_append(f"op {cmp} {output} {left} {right}")
+            return output
+
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+            # foo()
+            function = node.func.id
+            if function in BUILTIN_DEFS:
+                argc = BUILTIN_DEFS[function]
+                if len(node.args) != argc:
+                    raise CompilerError(ERR_ARGC_MISMATCH, node)
+
+                operands = " ".join(self.as_value(arg) for arg in node.args)
+                self.ins_append(f"op {function} {output} {operands}")
+                return output
+
+            else:
+                fn = self._functions.get(node.func.id)
+                if fn is None:
+                    raise CompilerError(ERR_NO_DEF, node)
+
+                if len(node.args) != fn.argc:
+                    raise CompilerError(ERR_ARGC_MISMATCH, node)
+
+                for arg in node.args:
+                    val = self.as_value(arg)
+                    self.ins_append(f"write {val} cell1 {REG_STACK}")
+                    self.ins_append(f"op add {REG_STACK} {REG_STACK} 1")
+
+                self.ins_append(f"write @counter cell1 {REG_STACK}")
+                self.ins_append(_Jump(fn.start, "always"))
+                # Expressions may be very complex elsewhere, make sure `REG_RET` is not overwritten.
+                self.ins_append(f"set {output} {REG_RET}")
+                return output
+
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            # Unit.radar()
+            obj = node.func.value.id
+            method = node.func.attr
+            if obj == "Env":
+                var = ENV_TO_VAR.get(method)
+                if var is None:
+                    raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+                return var
+            elif obj == "Sensor":
+                if len(node.args) != 1:
+                    raise CompilerError(ERR_ARGC_MISMATCH, node)
+
+                arg = node.args[0].id
+
+                attr = RES_MAP.get(method)
+                if attr is None:
+                    raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+
+                self.ins_append(f"sensor {output} {arg} {attr}")
+                return output
+            elif method == "radar":
+                return self.radar_instruction(output, obj, node)
+
+        raise CompilerError(ERR_UNSUPPORTED_EXPR, node)
 
     def generate_masm(self):
         # Fill labels' line numbers
