@@ -32,6 +32,14 @@ def masm_test(source_func):
     return wrapped
 
 
+def expect_err(err, source):
+    """
+    Expect the error to be raised, and fail if it's not.
+    """
+    with pytest.raises(pyndustric.CompilerError, match=err):
+        pyndustric.Compiler().compile(source)
+
+
 def test_all_err_have_desc_and_tests():
     error_names = [name for name in dir(pyndustric) if name.startswith("ERR_")]
     error_values = {getattr(pyndustric, name) for name in error_names}
@@ -47,126 +55,83 @@ def test_all_err_have_desc_and_tests():
 
 
 def test_err_complex_assign():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_ASSIGN):
-        pyndustric.Compiler().compile("a, b = c = 1, 2")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_ASSIGN):
-        pyndustric.Compiler().compile("a.b = 1")
+    expect_err(pyndustric.ERR_COMPLEX_ASSIGN, "a, b = c = 1, 2")
+    expect_err(pyndustric.ERR_COMPLEX_ASSIGN, "a.b = 1")
 
 
 def test_err_complex_value():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_VALUE):
-        pyndustric.Compiler().compile("a = 1 + 2j")
+    expect_err(pyndustric.ERR_COMPLEX_VALUE, "a = 1 + 2j")
 
 
 def test_err_unsupported_op():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_OP):
-        pyndustric.Compiler().compile("a = m0 @ m1")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_OP):
-        pyndustric.Compiler().compile("a @= m")
+    expect_err(pyndustric.ERR_UNSUPPORTED_OP, "a = m0 @ m1")
+    expect_err(pyndustric.ERR_UNSUPPORTED_OP, "a @= m")
 
 
 def test_err_unsupported_iter():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_ITER):
-        pyndustric.Compiler().compile("for x in [1, 2]: pass")
+    expect_err(pyndustric.ERR_UNSUPPORTED_ITER, "for x in [1, 2]: pass")
 
 
 def test_err_bad_iter_args():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_ITER_ARGS):
-        pyndustric.Compiler().compile("for x in range(): pass")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_ITER_ARGS):
-        pyndustric.Compiler().compile("for x in range(1, 2, 3, 4): pass")
+    expect_err(pyndustric.ERR_BAD_ITER_ARGS, "for x in range(): pass")
+    expect_err(pyndustric.ERR_BAD_ITER_ARGS, "for x in range(1, 2, 3, 4): pass")
 
 
 def test_err_unsupported_import():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_IMPORT):
-        pyndustric.Compiler().compile("from math import log")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_IMPORT):
-        pyndustric.Compiler().compile("import pyndustri")
+    expect_err(pyndustric.ERR_UNSUPPORTED_IMPORT, "from math import log")
+    expect_err(pyndustric.ERR_UNSUPPORTED_IMPORT, "import pyndustri")
 
 
 def test_err_unsupported_expr():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_EXPR):
-        pyndustric.Compiler().compile("1 + (2 + 3)")
+    expect_err(pyndustric.ERR_UNSUPPORTED_EXPR, "1 + (2 + 3)")
 
 
 def test_err_unsupported_syscall():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_SYSCALL):
-        pyndustric.Compiler().compile("Missing.method()")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_SYSCALL):
-        pyndustric.Compiler().compile("Screen.missing()")
+    expect_err(pyndustric.ERR_UNSUPPORTED_SYSCALL, "Missing.method()")
+    expect_err(pyndustric.ERR_UNSUPPORTED_SYSCALL, "Screen.missing()")
 
 
 def test_err_bad_syscall_args():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_SYSCALL_ARGS):
-        pyndustric.Compiler().compile("Screen.clear(1)")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_SYSCALL_ARGS):
-        pyndustric.Compiler().compile("Screen.clear(1, 2, 3, 4)")
+    expect_err(pyndustric.ERR_BAD_SYSCALL_ARGS, "Screen.clear(1)")
+    expect_err(pyndustric.ERR_BAD_SYSCALL_ARGS, "Screen.clear(1, 2, 3, 4)")
 
 
 def test_err_nested_def():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_NESTED_DEF):
-        pyndustric.Compiler().compile("def foo():\n  def bar():\n    pass")
+    expect_err(pyndustric.ERR_NESTED_DEF, "def foo():\n  def bar():\n    pass")
 
 
 def test_err_invalid_def():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_INVALID_DEF):
-        pyndustric.Compiler().compile("def foo(a=None): pass")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_INVALID_DEF):
-        pyndustric.Compiler().compile("def foo(*, a): pass")
+    expect_err(pyndustric.ERR_INVALID_DEF, "def foo(a=None): pass")
+    expect_err(pyndustric.ERR_INVALID_DEF, "def foo(*, a): pass")
 
     if sys.version_info >= (3, 8):
-        with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_INVALID_DEF):
-            pyndustric.Compiler().compile("def foo(a, /, b): pass")
+        expect_err(pyndustric.ERR_INVALID_DEF, "def foo(a, /, b): pass")
 
 
 def test_err_redef():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_REDEF):
-        pyndustric.Compiler().compile("def foo(): pass\ndef foo(): pass")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_REDEF):
-        pyndustric.Compiler().compile("def print(): pass")
+    expect_err(pyndustric.ERR_REDEF, "def foo(): pass\ndef foo(): pass")
+    expect_err(pyndustric.ERR_REDEF, "def print(): pass")
 
 
 def test_err_no_def():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_NO_DEF):
-        pyndustric.Compiler().compile("x = foo()")
+    expect_err(pyndustric.ERR_NO_DEF, "x = foo()")
 
 
 def test_err_argc_mismatch():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_ARGC_MISMATCH):
-        pyndustric.Compiler().compile("def foo(n): pass\nx = foo()")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_ARGC_MISMATCH):
-        pyndustric.Compiler().compile("def foo(n): pass\nx = foo(1, 2)")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_ARGC_MISMATCH):
-        pyndustric.Compiler().compile("u = Unit.radar(enemy, flying, ally, any)")
+    expect_err(pyndustric.ERR_ARGC_MISMATCH, "def foo(n): pass\nx = foo()")
+    expect_err(pyndustric.ERR_ARGC_MISMATCH, "def foo(n): pass\nx = foo(1, 2)")
+    expect_err(pyndustric.ERR_ARGC_MISMATCH, "u = Unit.radar(enemy, flying, ally, any)")
 
 
 def test_err_too_long():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_TOO_LONG):
-        pyndustric.Compiler().compile("x = 1\n" * (1 + pyndustric.MAX_INSTRUCTIONS))
+    expect_err(pyndustric.ERR_TOO_LONG, "x = 1\n" * (1 + pyndustric.MAX_INSTRUCTIONS))
 
 
 def test_err_bad_tuple():
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_EXPR):
-        pyndustric.Compiler().compile("x = 1, 2")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_TUPLE_ASSIGN):
-        pyndustric.Compiler().compile("x, y = 1")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_TUPLE_ASSIGN):
-        pyndustric.Compiler().compile("x, y = foo()")
-
-    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_TUPLE_ASSIGN):
-        pyndustric.Compiler().compile("x, y = a, b, c")
+    expect_err(pyndustric.ERR_UNSUPPORTED_EXPR, "x = 1, 2")
+    expect_err(pyndustric.ERR_BAD_TUPLE_ASSIGN, "x, y = 1")
+    expect_err(pyndustric.ERR_BAD_TUPLE_ASSIGN, "x, y = foo()")
+    expect_err(pyndustric.ERR_BAD_TUPLE_ASSIGN, "x, y = a, b, c")
 
 
 def test_no_compile_method():
