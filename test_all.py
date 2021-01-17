@@ -1,6 +1,8 @@
+import pathlib
 import pyndustric
 import pytest
 import sys
+import tempfile
 import textwrap
 
 
@@ -151,6 +153,26 @@ def test_no_compile_method():
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_INVALID_SOURCE):
         pyndustric.Compiler().compile(foo.bar)
+
+
+def test_compile_string():
+    masm = pyndustric.Compiler().compile("x = 1")
+
+
+def test_compile_path():
+    expected = as_masm(
+        """\
+        set x 1
+        """
+    )
+
+    with tempfile.TemporaryDirectory() as folder:
+        file = pathlib.Path(folder) / "test_compile_path.py"
+        with file.open("w") as fd:
+            fd.write("x = 1\n")
+
+        masm = pyndustric.Compiler().compile(file)
+        assert masm == expected
 
 
 def test_compile_function():
