@@ -24,7 +24,7 @@ def test_all_err_have_desc_and_tests():
 
 def test_err_complex_assign():
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_ASSIGN):
-        pyndustric.Compiler().compile("a, b = 1, 2")
+        pyndustric.Compiler().compile("a, b = c = 1, 2")
 
     with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_COMPLEX_ASSIGN):
         pyndustric.Compiler().compile("a.b = 1")
@@ -128,6 +128,20 @@ def test_err_too_long():
         pyndustric.Compiler().compile("x = 1\n" * (1 + pyndustric.MAX_INSTRUCTIONS))
 
 
+def test_err_bad_tuple():
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_UNSUPPORTED_EXPR):
+        pyndustric.Compiler().compile("x = 1, 2")
+
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_TUPLE_ASSIGN):
+        pyndustric.Compiler().compile("x, y = 1")
+
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_TUPLE_ASSIGN):
+        pyndustric.Compiler().compile("x, y = foo()")
+
+    with pytest.raises(pyndustric.CompilerError, match=pyndustric.ERR_BAD_TUPLE_ASSIGN):
+        pyndustric.Compiler().compile("x, y = a, b, c")
+
+
 def test_no_compile_method():
     class Foo:
         def bar(self):
@@ -184,12 +198,15 @@ def test_assignments():
 def test_multi_assignment():
     def source():
         x = y = z = 0
+        a, b = 1, 2
 
     expected = as_masm(
         """\
         set x 0
         set y x
         set z x
+        set a 1
+        set b 2
         """
     )
 

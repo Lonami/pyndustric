@@ -16,6 +16,7 @@ ERR_NO_DEF = "E014"
 ERR_ARGC_MISMATCH = "E015"
 ERR_TOO_LONG = "E016"
 ERR_INVALID_SOURCE = "E017"
+ERR_BAD_TUPLE_ASSIGN = "E018"
 
 ERROR_DESCRIPTIONS = {
     ERR_COMPLEX_ASSIGN: "cannot perform complex assignment",
@@ -34,6 +35,7 @@ ERROR_DESCRIPTIONS = {
     ERR_ARGC_MISMATCH: "different number of arguments used in function call from function definition",
     ERR_TOO_LONG: "the program is too long to fit in a logic processor",
     ERR_INVALID_SOURCE: "the provided source type to compile is not supported",
+    ERR_BAD_TUPLE_ASSIGN: "can only assign to a tuple if the right-hand side is a tuple of the same length",
 }
 
 BIN_CMP = {

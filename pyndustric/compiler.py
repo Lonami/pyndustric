@@ -145,16 +145,27 @@ class Compiler(ast.NodeVisitor):
 
     def visit_Assign(self, node: ast.Assign):
         target = node.targets[0]
-        if not isinstance(target, ast.Name):
+        if isinstance(target, ast.Name):
+            # a = b
+            output = self.as_value(node.value, target.id)
+            if output != target.id:
+                self.ins_append(f"set {target.id} {output}")
+
+            if len(node.targets) > 1:
+                for additional_target in node.targets[1:]:
+                    self.ins_append(f"set {additional_target.id} {target.id}")
+        elif isinstance(target, ast.Tuple) and len(node.targets) == 1:
+            # a, b = c, d
+            if not isinstance(node.value, ast.Tuple) or len(target.elts) != len(node.value.elts):
+                raise CompilerError(ERR_BAD_TUPLE_ASSIGN, node)
+
+            for left, right in zip(target.elts, node.value.elts):
+                left = left.id
+                output = self.as_value(right, left)
+                if output != left:
+                    self.ins_append(f"set {left} {output}")
+        else:
             raise CompilerError(ERR_COMPLEX_ASSIGN, node)
-
-        output = self.as_value(node.value, target.id)
-        if output != target.id:
-            self.ins_append(f"set {target.id} {output}")
-
-        if len(node.targets) > 1:
-            for additional_target in node.targets[1:]:
-                self.ins_append(f"set {additional_target.id} {target.id}")
 
     def visit_AugAssign(self, node: ast.Assign):
         target = node.target  # e.g., x in "x += 1"
