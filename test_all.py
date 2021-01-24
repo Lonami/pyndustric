@@ -195,13 +195,15 @@ def test_compile_function():
 @masm_test
 def test_assignments():
     """
-    set x 1
+    set x -1
     op add y x 2
     op equal z x y
+    op equal a 0 z
     """
-    x = 1
+    x = -1
     y = x + 2
     z = x == y
+    a = not z
 
 
 @masm_test

@@ -628,6 +628,40 @@ class Compiler(ast.NodeVisitor):
             self.ins_append(f"sensor {output} {obj} {attr}")
             return output
 
+        if isinstance(node, ast.UnaryOp):
+            # -1
+            op = type(node.op)
+            # Optimize constants by evaluating them directly.
+            if isinstance(node.operand, ast.Constant):
+                const = node.operand.value
+                if op == ast.Invert:
+                    value = ~const
+                elif op == ast.Not:
+                    value = not const
+                elif op == ast.UAdd:
+                    value = +const
+                elif op == ast.USub:
+                    value = -const
+                else:
+                    raise CompilerError(ERR_UNSUPPORTED_OP, node)
+
+                return self.as_value(ast.Constant(value=value))
+            else:
+                operand = self.as_value(node.operand)
+                # No map here because Mindustry lacks some of these as unary (emulated as binary).
+                if op == ast.Invert:
+                    self.ins_append(f"op flip {output} {operand}")
+                elif op == ast.Not:
+                    self.ins_append(f"op equal {output} 0 {operand}")
+                elif op == ast.UAdd:
+                    self.ins_append(f"op add {output} 0 {operand}")
+                elif op == ast.USub:
+                    self.ins_append(f"op sub {output} 0 {operand}")
+                else:
+                    raise CompilerError(ERR_UNSUPPORTED_OP, node)
+
+                return output
+
         if isinstance(node, ast.BinOp):
             # 1 + 2
             op = BIN_OPS.get(type(node.op))
