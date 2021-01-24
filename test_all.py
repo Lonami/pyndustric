@@ -680,3 +680,18 @@ def test_control():
     reactor.enabled(False)
     duo1.shoot(10, 20)
     scatter1.ceasefire()
+
+
+@masm_test
+def test_memory():
+    """
+    set dst 2
+    read value cell1 1
+    write value cell1 dst
+    """
+    dst = 2
+    value = cell1.read(1)
+    cell1.write(dst, value)
+
+    # If the read result is written to nowhere, it's a no-op, so not emitted.
+    cell1.read(0)
