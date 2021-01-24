@@ -596,10 +596,9 @@ class Compiler(ast.NodeVisitor):
         elif isinstance(node, ast.Attribute):
             # container1.copper
             obj = node.value.id
-            attr = node.attr
+            attr = _name_as_resource(node.attr)
 
-            mlog_attr = _name_as_resource(attr)
-            self.ins_append(f"sensor {output} {obj} {mlog_attr}")
+            self.ins_append(f"sensor {output} {obj} {attr}")
             return output
 
         if isinstance(node, ast.BinOp):
