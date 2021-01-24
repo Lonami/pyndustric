@@ -723,10 +723,7 @@ class Compiler(ast.NodeVisitor):
             obj = node.func.value.id
             method = node.func.attr
             if obj == "Env":
-                var = ENV_TO_VAR.get(method)
-                if var is None:
-                    raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
-                return var
+                return _name_as_resource(method)
             elif method == "radar":
                 return self.radar_instruction(output, obj, node)
 

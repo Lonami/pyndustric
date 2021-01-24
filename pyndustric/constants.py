@@ -97,7 +97,9 @@ BUILTIN_DEFS = {
 
 RADAR_ORDERS = {"min": "1", "True": "1", "1": "1", "max": "0", "False": "0", "0": "0"}
 
-ENV_TO_VAR = {
+# Map Pythonic resource names with non-standard resources (camelCase, not kebab-case).
+RES_MAP = {
+    # Environment-related
     "this": "@this",
     "x": "@thisx",
     "y": "@thisy",
@@ -106,10 +108,7 @@ ENV_TO_VAR = {
     "time": "@time",
     "width": "@mapw",
     "height": "@maph",
-}
-
-# Map Pythonic resource names with non-standard resources (camelCase, not kebab-case).
-RES_MAP = {
+    # Resource-related
     "items": "@totalItems",
     "first_item": "@firstItem",
     "liquids": "@totalLiquids",

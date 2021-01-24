@@ -572,6 +572,7 @@ def test_print():
 @masm_test
 def test_env():
     """
+    set cop @copper
     set this @this
     set x @thisx
     set y @thisy
@@ -586,6 +587,7 @@ def test_env():
     op add __pyc_it_26_16 __pyc_it_26_16 1
     jump 10 always
     """
+    cop = Env.copper()
     this = Env.this()
     x = Env.x()
     y = Env.y()
