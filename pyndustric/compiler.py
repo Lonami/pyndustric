@@ -304,6 +304,7 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_UNSUPPORTED_ITER, node)
 
         inject = []
+        backwards = False
 
         if (
             isinstance(call.func, ast.Attribute)
@@ -323,6 +324,7 @@ class Compiler(ast.NodeVisitor):
                 start, end, step = *map(self.as_value, argv), 1
             elif argc == 3:
                 start, end, step = map(self.as_value, argv)
+                backwards = isinstance(argv[2], ast.UnaryOp) and isinstance(argv[2].op, ast.USub)
             else:
                 raise CompilerError(ERR_BAD_ITER_ARGS, node)
         else:
@@ -333,7 +335,10 @@ class Compiler(ast.NodeVisitor):
         end_label = _Label()
         condition = _Label()
         self.ins_append(condition)
-        self.ins_append(_Jump(end_label, f"greaterThanEq {it} {end}"))
+        if backwards:
+            self.ins_append(_Jump(end_label, f"lessThanEq {it} {end}"))
+        else:
+            self.ins_append(_Jump(end_label, f"greaterThanEq {it} {end}"))
 
         self._ins.extend(inject)
         for subnode in node.body:

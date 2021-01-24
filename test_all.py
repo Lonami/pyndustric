@@ -401,6 +401,19 @@ def test_for_start_end_step():
 
 
 @masm_test
+def test_for_negative():
+    """
+    set x 10
+    jump 6 lessThanEq x 0
+    op add y x x
+    op add x x -1
+    jump 2 always
+    """
+    for x in range(10, 0, -1):
+        y = x + x
+
+
+@masm_test
 def test_def():
     # TODO cells can't store strings, test that no fn args are
     """
