@@ -95,6 +95,10 @@ def _parse_code(code: str):
 
 
 def _name_as_resource(name: str):
+    # It might already be a resource (e.g. when needing a resource and getting Env.res).
+    if name.startswith("@"):
+        return name
+
     # String literal name, perform no replacement.
     if name.startswith('"'):
         return "@" + name.strip('"')
@@ -620,10 +624,15 @@ class Compiler(ast.NodeVisitor):
             return output
 
         elif isinstance(node, ast.Subscript):
-            # container1[copper]
-            # 'some_object'['@some_resource']
+            # container1[dynamic_res]
+            # 'some_object'['some_resource']
             obj = self.as_value(node.value).strip('"')
-            attr = _name_as_resource(self.as_value(node.slice))
+            if isinstance(node.slice, ast.Name):
+                # Dynamic resource (pretend the input is a variable and not a resource).
+                # If the user does not want this, they should use `obj.attr` instead.
+                attr = node.slice.id
+            else:
+                attr = _name_as_resource(self.as_value(node.slice))
 
             self.ins_append(f"sensor {output} {obj} {attr}")
             return output

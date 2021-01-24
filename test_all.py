@@ -581,11 +581,11 @@ def test_env():
     set time @time
     set width @mapw
     set height @maph
-    set __pyc_it_26_16 0
-    jump 14 greaterThanEq __pyc_it_26_16 @links
-    getlink link __pyc_it_26_16
-    op add __pyc_it_26_16 __pyc_it_26_16 1
-    jump 10 always
+    set __pyc_it_28_16 0
+    jump 15 greaterThanEq __pyc_it_28_16 @links
+    getlink link __pyc_it_28_16
+    op add __pyc_it_28_16 __pyc_it_28_16 1
+    jump 11 always
     """
     cop = Env.copper()
     this = Env.this()
@@ -611,13 +611,15 @@ def test_sensor():
 @masm_test
 def test_sensor_subscript():
     """
-    sensor co container2 @copper
+    set dyn @copper
+    sensor co container2 dyn
     sensor ab a_b @lead
     sensor cd container3 @c_d
     sensor ef e_f @g_h
     """
-    co = container2[copper]
-    ab = "a_b"[lead]
+    dyn = Env.copper()
+    co = container2[dyn]
+    ab = "a_b"[Env.lead()]
     cd = container3["c_d"]
     ef = "e_f"["g_h"]
 
