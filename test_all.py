@@ -600,16 +600,32 @@ def test_env():
 def test_sensor():
     """
     sensor pf container1 @phase-fabric
+    """
+    pf = container1.phase_fabric
+
+
+@masm_test
+def test_sensor_subscript():
+    """
     sensor co container2 @copper
     sensor ab a_b @lead
     sensor cd container3 @c_d
     sensor ef e_f @g_h
     """
-    pf = container1.phase_fabric
     co = container2[copper]
     ab = "a_b"[lead]
     cd = container3["c_d"]
     ef = "e_f"["g_h"]
+
+
+@masm_test
+def test_sensor_special_names():
+    """
+    sensor __pyc_tmp_1 duo1 @health
+    sensor __pyc_tmp_2 duo1 @maxHealth
+    op div health __pyc_tmp_1 __pyc_tmp_2
+    """
+    health = duo1.health / duo1.max_health
 
 
 @masm_test

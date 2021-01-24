@@ -108,6 +108,29 @@ ENV_TO_VAR = {
     "height": "@maph",
 }
 
+# Map Pythonic resource names with non-standard resources (camelCase, not kebab-case).
+RES_MAP = {
+    "items": "@totalItems",
+    "first_item": "@firstItem",
+    "liquids": "@totalLiquids",
+    "power": "@totalPower",
+    "max_items": "@itemCapacity",
+    "max_liquids": "@liquidCapacity",
+    "max_power": "@powerCapacity",
+    "power_stored": "@powerNetStored",
+    "power_capacity": "@powerNetCapacity",
+    "power_in": "@powerNetIn",
+    "power_out": "@powerNetOut",
+    "max_ammo": "@ammoCapacity",
+    "max_health": "@maxHealth",
+    "shoot_x": "@shootX",
+    "shoot_y": "@shootY",
+    "mine_x": "@mineX",
+    "mine_y": "@mineY",
+    "payload": "@payloadCount",
+    "payload_type": "@payloadType",
+}
+
 REG_STACK = "__pyc_sp"
 REG_RET = "__pyc_ret"
 REG_RET_COUNTER_PREFIX = "__pyc_rc_"

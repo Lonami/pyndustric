@@ -95,10 +95,18 @@ def _parse_code(code: str):
 
 
 def _name_as_resource(name: str):
+    # String literal name, perform no replacement.
     if name.startswith('"'):
         return "@" + name.strip('"')
-    else:
-        return "@" + name.replace("_", "-")
+
+    # Some names are not kebab-case, try resolve those from the RES_MAP first.
+    resource = RES_MAP.get(name)
+
+    # For any other name, assume it's kebab-case.
+    if not resource:
+        resource = "@" + name.replace("_", "-")
+
+    return resource
 
 
 class Compiler(ast.NodeVisitor):
