@@ -600,14 +600,6 @@ def test_sensor():
     """
     sensor pf container1 @phase-fabric
     """
-    pf = Sensor.phase_fabric(container1)
-
-
-@masm_test
-def test_object_attribute():
-    """
-    sensor pf container1 @phase-fabric
-    """
     pf = container1.phase_fabric
 
 

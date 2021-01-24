@@ -94,6 +94,10 @@ def _parse_code(code: str):
     return CompatTransformer().visit(ast.parse(code))
 
 
+def _name_as_resource(name: str):
+    return "@" + name.replace("_", "-")
+
+
 class Compiler(ast.NodeVisitor):
     def __init__(self):
         self._ins = [_Instruction(f"set {REG_STACK} 0")]
@@ -594,7 +598,7 @@ class Compiler(ast.NodeVisitor):
             obj = node.value.id
             attr = node.attr
 
-            mlog_attr = "@" + attr.replace("_", "-")
+            mlog_attr = _name_as_resource(attr)
             self.ins_append(f"sensor {output} {obj} {mlog_attr}")
             return output
 
@@ -663,18 +667,6 @@ class Compiler(ast.NodeVisitor):
                 if var is None:
                     raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
                 return var
-            elif obj == "Sensor":
-                if len(node.args) != 1:
-                    raise CompilerError(ERR_ARGC_MISMATCH, node)
-
-                arg = node.args[0].id
-
-                attr = RES_MAP.get(method)
-                if attr is None:
-                    raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
-
-                self.ins_append(f"sensor {output} {arg} {attr}")
-                return output
             elif method == "radar":
                 return self.radar_instruction(output, obj, node)
 
