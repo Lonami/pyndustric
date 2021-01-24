@@ -587,15 +587,15 @@ def test_env():
     op add __pyc_it_28_16 __pyc_it_28_16 1
     jump 11 always
     """
-    cop = Env.copper()
-    this = Env.this()
-    x = Env.x()
-    y = Env.y()
-    pc = Env.counter()
-    links = Env.link_count()
-    time = Env.time()
-    width = Env.width()
-    height = Env.height()
+    cop = Env.copper
+    this = Env.this
+    x = Env.x
+    y = Env.y
+    pc = Env.counter
+    links = Env.link_count
+    time = Env.time
+    width = Env.width
+    height = Env.height
     for link in Env.links():
         pass
 
@@ -617,9 +617,9 @@ def test_sensor_subscript():
     sensor cd container3 @c_d
     sensor ef e_f @g_h
     """
-    dyn = Env.copper()
+    dyn = Env.copper
     co = container2[dyn]
-    ab = "a_b"[Env.lead()]
+    ab = "a_b"[Env.lead]
     cd = container3["c_d"]
     ef = "e_f"["g_h"]
 

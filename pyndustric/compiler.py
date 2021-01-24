@@ -616,9 +616,14 @@ class Compiler(ast.NodeVisitor):
             return node.id
 
         elif isinstance(node, ast.Attribute):
+            # Env.copper
             # container1.copper
             obj = node.value.id
             attr = _name_as_resource(node.attr)
+
+            # No need to sense the resource if we just want to grab it from Env.
+            if obj == "Env":
+                return attr
 
             self.ins_append(f"sensor {output} {obj} {attr}")
             return output
@@ -731,9 +736,7 @@ class Compiler(ast.NodeVisitor):
             # Unit.radar()
             obj = node.func.value.id
             method = node.func.attr
-            if obj == "Env":
-                return _name_as_resource(method)
-            elif method == "radar":
+            if method == "radar":
                 return self.radar_instruction(output, obj, node)
 
         raise CompilerError(ERR_UNSUPPORTED_EXPR, node)
