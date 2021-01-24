@@ -89,6 +89,7 @@ def test_err_unsupported_expr():
 def test_err_unsupported_syscall():
     expect_err(pyndustric.ERR_UNSUPPORTED_SYSCALL, "Missing.method()")
     expect_err(pyndustric.ERR_UNSUPPORTED_SYSCALL, "Screen.missing()")
+    expect_err(pyndustric.ERR_UNSUPPORTED_SYSCALL, "unit.unknown_control()")
 
 
 def test_err_bad_syscall_args():
@@ -654,6 +655,6 @@ def test_control():
     control shoot duo1 10 20 1
     control shoot scatter1 0 0 0
     """
-    Control.enabled(reactor, False)
-    Control.shoot(duo1, 10, 20)
-    Control.ceasefire(scatter1)
+    reactor.enabled(False)
+    duo1.shoot(10, 20)
+    scatter1.ceasefire()

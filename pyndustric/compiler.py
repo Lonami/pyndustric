@@ -412,8 +412,9 @@ class Compiler(ast.NodeVisitor):
         ns = call.func.value.id
         if ns == "Screen":
             self.emit_screen_syscall(call)
-        elif ns == "Control":
-            self.emit_control_syscall(call)
+        # Try to emit a control call if the method name is recognised, no matter the object.
+        elif self.emit_control_syscall(call):
+            pass
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
@@ -546,30 +547,32 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
     def emit_control_syscall(self, node: ast.Call):
+        link = node.func.value.id
         method = node.func.attr
         if method == "enabled":
-            if len(node.args) != 2:
+            if len(node.args) != 1:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
-            link, enabled = map(self.as_value, node.args)
+            enabled = self.as_value(node.args[0])
             self.ins_append(f"control enabled {link} {enabled}")
         elif method == "shoot":
-            if len(node.args) == 3:
-                link, x, y, enabled = *map(self.as_value, node.args), 1
-            elif len(node.args) == 4:
-                link, x, y, enabled = map(self.as_value, node.args)
+            if len(node.args) == 2:
+                x, y, enabled = *map(self.as_value, node.args), 1
+            elif len(node.args) == 3:
+                x, y, enabled = map(self.as_value, node.args)
             else:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
             self.ins_append(f"control shoot {link} {x} {y} {enabled}")
         elif method == "ceasefire":
-            if len(node.args) != 1:
+            if len(node.args) != 0:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
-            link = self.as_value(node.args[0])
             self.ins_append(f"control shoot {link} 0 0 0")
         else:
-            raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+            return False
+
+        return True
 
     def as_value(self, node, output: str = None):
         """

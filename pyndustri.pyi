@@ -161,17 +161,16 @@ class Senseable(ABC):
     def enabled(self) -> bool:
         """Is this link enabled?"""
 
-class Control:
+class Controllable(ABC):
     """
-    Lets you control a given link.
+    Type hints for things that can be controlled.
     """
 
-    @staticmethod
-    def enabled(link: Link, enabled: bool):
+    def enabled(self, enabled: bool):
         """Sets the link enabled or disabled, based on the given value."""
-    def shoot(link: Link, x: int, y: int, enabled: bool = True):
+    def shoot(self, x: int, y: int, enabled: bool = True):
         """Sets the link to shoot or not, and if shooting, the position."""
-    def ceasefire(link: Link):
+    def ceasefire(self):
         """Shorthand to stop firing."""
 
 class Screen:
