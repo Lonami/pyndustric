@@ -1,3 +1,8 @@
 [tool.black]
 line-length = 108
 target-version = ['py36']
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    'ignore:str indices must be integers or slices, not str',
+]

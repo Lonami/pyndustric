@@ -599,8 +599,16 @@ def test_env():
 def test_sensor():
     """
     sensor pf container1 @phase-fabric
+    sensor co container2 @copper
+    sensor ab a_b @lead
+    sensor cd container3 @c_d
+    sensor ef e_f @g_h
     """
     pf = container1.phase_fabric
+    co = container2[copper]
+    ab = "a_b"[lead]
+    cd = container3["c_d"]
+    ef = "e_f"["g_h"]
 
 
 @masm_test

@@ -95,7 +95,10 @@ def _parse_code(code: str):
 
 
 def _name_as_resource(name: str):
-    return "@" + name.replace("_", "-")
+    if name.startswith('"'):
+        return "@" + name.strip('"')
+    else:
+        return "@" + name.replace("_", "-")
 
 
 class Compiler(ast.NodeVisitor):
@@ -597,6 +600,15 @@ class Compiler(ast.NodeVisitor):
             # container1.copper
             obj = node.value.id
             attr = _name_as_resource(node.attr)
+
+            self.ins_append(f"sensor {output} {obj} {attr}")
+            return output
+
+        elif isinstance(node, ast.Subscript):
+            # container1[copper]
+            # 'some_object'['@some_resource']
+            obj = self.as_value(node.value).strip('"')
+            attr = _name_as_resource(self.as_value(node.slice))
 
             self.ins_append(f"sensor {output} {obj} {attr}")
             return output
