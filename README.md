@@ -74,13 +74,10 @@ link_count = Env.link_count()
 Built-in functions to access sensors, like the amount of copper or current health:
 
 ```python
-copper = Sensor.copper(container1)
+copper = container1.copper
 need_resources = copper == 0  # we're out of copper!
 
-max_health = Sensor.max_health(duo1)
-health = Sensor.health(duo)
-
-health = health / max_health
+health = duo1.health / duo1.max_health
 need_healing = health < 0.5  # less than 50% health!
 ```
 
@@ -88,9 +85,8 @@ Built-in functions to tell things what to do, like disabling them or shooting:
 
 ```python
 for reactor in Env.links():
-    heat = Sensor.heat(reactor)
-    safe = heat == 0
-    Control.enabled(reactor, safe)  # turn off all reactors with non-zero heat
+    safe = reactor.heat == 0
+    reactor.enabled(safe)  # turn off all reactors with non-zero heat
 ```
 
 Custom function definitions:
