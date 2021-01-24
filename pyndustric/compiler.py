@@ -68,9 +68,14 @@ class CompilerError(ValueError):
         super().__init__(f"[{code}/{node.lineno}:{node.col_offset}] {ERROR_DESCRIPTIONS[code]}")
 
 
-if sys.version_info < (3, 8):
+class CompatTransformer(ast.NodeTransformer):
+    if sys.version_info < (3, 9):
 
-    class CompatTransformer(ast.NodeTransformer):
+        def visit_Index(self, node):
+            return self.visit(node.value)
+
+    if sys.version_info < (3, 8):
+
         def visit_Num(self, node):
             return ast.copy_location(ast.Constant(value=node.n), node)
 
@@ -82,12 +87,6 @@ if sys.version_info < (3, 8):
 
         def visit_NameConstant(self, node):
             return ast.copy_location(ast.Constant(value=node.value), node)
-
-
-else:
-
-    class CompatTransformer(ast.NodeTransformer):
-        pass
 
 
 def _parse_code(code: str):
@@ -595,10 +594,6 @@ class Compiler(ast.NodeVisitor):
         """
         if output is None:
             output = self._tmp_var_name()
-
-        if sys.version_info < (3, 9):
-            if isinstance(node, ast.Index):
-                node = node.value
 
         if isinstance(node, ast.Constant):
             # true, 1.23, "string", 4j
