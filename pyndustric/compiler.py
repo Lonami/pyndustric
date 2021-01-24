@@ -592,6 +592,10 @@ class Compiler(ast.NodeVisitor):
         if output is None:
             output = self._tmp_var_name()
 
+        if sys.version_info < (3, 9):
+            if isinstance(node, ast.Index):
+                node = node.value
+
         if isinstance(node, ast.Constant):
             # true, 1.23, "string", 4j
             if isinstance(node.value, bool):
