@@ -30,10 +30,11 @@ class _Label(_Instruction):
         self._lineno = None
 
     def __str__(self):
-        assert self._lineno is not None, (
-            "internal compiler error: lineno should be set."
-            " some instruction likely referenced this unstored label"
-        )
+        if self._lineno is None:
+            raise InternalCompilerError(
+                "lineno should be set. some instruction likely referenced this unstored label", None
+            )
+
         return str(self._lineno)
 
 
@@ -66,6 +67,14 @@ class CompilerError(ValueError):
             node = ast.Module(lineno=0, col_offset=0)  # dummy value
 
         super().__init__(f"[{code}/{node.lineno}:{node.col_offset}] {ERROR_DESCRIPTIONS[code]}")
+
+
+class InternalCompilerError(CompilerError):
+    def __init__(self, code, node: ast.AST):
+        if node is None:
+            node = ast.Module(lineno=0, col_offset=0)  # dummy value
+
+        ValueError.__init__(self, f"[ICE/{node.lineno}:{node.col_offset}] {code}")
 
 
 class CompatTransformer(ast.NodeTransformer):
@@ -405,7 +414,9 @@ class Compiler(ast.NodeVisitor):
         self._epilogue = None
 
     def visit_Return(self, node):
-        assert self._epilogue, "internal compiler error: return encountered with epilogue being unset"
+        if not self._epilogue:
+            raise InternalCompilerError("return encountered with epilogue being unset", node)
+
         val = self.as_value(node.value)
         self.ins_append(f"set {REG_RET} {val}")
         self.ins_append(_Jump(self._epilogue, "always"))
