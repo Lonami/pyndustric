@@ -44,9 +44,9 @@ def main():
             file=sys.stderr,
         )
 
-        if args.clipboard:
-                import ait
-                ait.copy(complete_masm)
+    if args.clipboard:
+            import ait
+            ait.copy(complete_masm)
 
 if __name__ == "__main__":
     main()
