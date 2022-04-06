@@ -713,6 +713,48 @@ def test_bad_ubind():
 
 
 @masm_test
+def test_unit_actions():
+    """
+    ucontrol idle 0 0 0 0 0
+    ucontrol stop 0 0 0 0 0
+    ucontrol move 1 2 0 0 0
+    ucontrol approach 3 4 5 0 0
+    ucontrol within 6 7 8 w 0
+    ucontrol boost 1 0 0 0 0
+    ucontrol boost 0 0 0 0 0
+    ucontrol pathfind 0 0 0 0 0
+    ucontrol target 9 10 1 0 0
+    ucontrol target 0 0 0 0 0
+    ucontrol itemTake from item amount 0 0
+    ucontrol itemTake from item amount 0 0
+    ucontrol itemDrop to amount 0 0 0
+    ucontrol itemDrop to amount 0 0 0
+    ucontrol payTake takeUnits 0 0 0 0
+    ucontrol payTake takeUnits 0 0 0 0
+    ucontrol payDrop 0 0 0 0 0
+    ucontrol mine 13 14 0 0 0
+    """
+    Unit.idle()
+    Unit.stop()
+    Unit.move(1, 2)
+    Unit.approach(3, 4, 5)
+    w = Unit.within(6, 7, 8)
+    Unit.boost(1)
+    Unit.boost(0)
+    Unit.pathfind()
+    Unit.shoot(9, 10)
+    Unit.ceasefire()
+    Unit.fetch('container1', 'copper')
+    Unit.fetch('container1', 'copper', 11)
+    Unit.store('container1')
+    Unit.store('container1', 12)
+    Unit.lift()
+    Unit.carry()
+    Unit.drop()
+    Unit.mine(13, 14)
+
+
+@masm_test
 def test_memory():
     """
     write 1 cell1 0

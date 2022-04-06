@@ -96,6 +96,12 @@ Built-in singleton to bind to units and use them:
 ```python
 Unit.bind('alpha')
 print(Unit.x + Unit.y)
+
+enemy_unit = Unit.radar(enemy, flying, order=max, key=distance)
+Unit.move(100, 200)
+
+if Unit.within(100, 200, 10):
+    Unit.shoot(100, 200)
 ```
 
 Built-in class to access memory:

@@ -608,7 +608,101 @@ class Compiler(ast.NodeVisitor):
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
             self.ins_append(f"ubind @{unit}")
+
+        elif method == "idle":
+            if len(node.args) != 0:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self.ins_append("ucontrol idle 0 0 0 0 0")
+
+        elif method == "stop":
+            if len(node.args) != 0:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self.ins_append("ucontrol stop 0 0 0 0 0")
+
+        elif method == "move":
+            if len(node.args) != 2:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            x, y = map(self.as_value, node.args)
+            self.ins_append(f"ucontrol move {x} {y} 0 0 0")
+
+        elif method == "approach":
+            if len(node.args) != 3:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            x, y, r = map(self.as_value, node.args)
+            self.ins_append(f"ucontrol approach {x} {y} {r} 0 0")
+
+        elif method == "boost":
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            enable = self.as_value(node.args[0])
+            self.ins_append(f"ucontrol boost {enable} 0 0 0 0")
+
+        elif method == "pathfind":
+            if len(node.args) != 0:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self.ins_append("ucontrol pathfind 0 0 0 0 0")
+
+        elif method == "shoot":
+            if len(node.args) != 2:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            # Not sure how targetp (unit shoot) works... so that's not implemented.
+            x, y = map(self.as_value, node.args)
+            self.ins_append(f"ucontrol target {x} {y} 1 0 0")
+
+        elif method == "ceasefire":
+            if len(node.args) != 0:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self.ins_append("ucontrol target 0 0 0 0 0")
+
+        elif method == "fetch":
+            if len(node.args) not in (2, 3):
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            # WIP
+            self.ins_append("ucontrol itemTake from item amount 0 0")
+
+        elif method == "store":
+            if len(node.args) not in (1, 2):
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            # WIP
+            self.ins_append("ucontrol itemDrop to amount 0 0 0")
+
+        elif method == "lift":
+            if len(node.args) != 0:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self.ins_append("ucontrol payTake takeUnits 0 0 0 0")
+
+        elif method == "carry":
+            if len(node.args) != 0:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self.ins_append("ucontrol payTake takeUnits 0 0 0 0")
+
+        elif method == "drop":
+            if len(node.args) != 0:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self.ins_append("ucontrol payDrop 0 0 0 0 0")
+
+        elif method == "mine":
+            if len(node.args) != 2:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            x, y = map(self.as_value, node.args)
+            self.ins_append(f"ucontrol mine {x} {y} 0 0 0")
+
         else:
+            # build and getBlock have virtually no documentation, so not implemented yet as I can't figure them out.
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
     def emit_control_syscall(self, node: ast.Call):
@@ -673,8 +767,9 @@ class Compiler(ast.NodeVisitor):
             if obj == "Env":
                 return _name_as_env(node.attr)
 
-            # Unit is special-cased
+            # Unit is special-cased.
             if obj == "Unit":
+                # ...and the Unit's flag doubly-so.
                 obj = "@unit"
 
             attr = _name_as_res(node.attr)
@@ -795,11 +890,25 @@ class Compiler(ast.NodeVisitor):
                 return output
 
         elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-            # Unit.radar()
+            # building.radar(), Unit.radar()
             obj = node.func.value.id
             method = node.func.attr
             if method == "radar":
                 return self.radar_instruction(output, obj, node)
+
+            # The next functions are only available on units.
+            if obj != "Unit":
+                raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+
+            if method == "within":
+                if len(node.args) != 3:
+                    raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+                x, y, r = map(self.as_value, node.args)
+                self.ins_append(f"ucontrol within {x} {y} {r} {output} 0")
+                return output
+            else:
+                raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
         raise CompilerError(ERR_UNSUPPORTED_EXPR, node)
 

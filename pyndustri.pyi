@@ -257,6 +257,103 @@ class Unit(Senseable):
         * Player: alpha, beta, gamma.
         """
 
+    @staticmethod
+    def idle():
+        """
+        Command the bound unit to remain idle.
+        """
+
+    @staticmethod
+    def stop():
+        """
+        Command the bound unit to stop.
+        """
+
+    @staticmethod
+    def move(x: int, y: int):
+        """
+        Command the bound unit to move to the given coordinates.
+        """
+
+    @staticmethod
+    def approach(x: int, y: int, radius: int):
+        """
+        Command the bound unit to approach the given coordinates, around a desired radius.
+        """
+
+    @staticmethod
+    def within(x: int, y: int, radius: int):
+        """
+        Return true if the bound unit is within the radius around the specified coordinates.
+        """
+
+    @staticmethod
+    def boost(amount: int):
+        """
+        Enable or disable the boost of the bound unit. The amount of boost is either 0 to disable or 1 to enable.
+        """
+
+    @staticmethod
+    def pathfind():
+        """
+        Command the bound unit to pathfind to the enemy core.
+        """
+
+    @staticmethod
+    def shoot(self, x: int, y: int):  # target
+        """
+        Command the unit to shoot to the specified coordinates. Won't do anything if the coordinates are out of reach.
+        """
+
+    @staticmethod
+    def ceasefire(self):  # target
+        """
+        Command the unit to stop firing immediately.
+        """
+
+    @staticmethod
+    def fetch(container, item, amount=1):  # itemTake
+        """
+        Command the unit to fetch (take out) an item from the specified container.
+        """
+
+    @staticmethod
+    def store(container, amount=1):  # itemDrop
+        """
+        Command the unit to store (put) an item into the specified container.
+        """
+
+    @staticmethod
+    def lift():  # payTake with takeUnits 0
+        """
+        Command the unit to lift a block.
+        """
+
+    @staticmethod
+    def carry():  # payTake with takeUnits 1
+        """
+        Command the unit to lift a unit (or block if there is no unit).
+        """
+
+    @staticmethod
+    def drop():  # payDrop
+        """
+        Command the unit to drop the currently-held payload (a block or unit).
+        """
+
+    @staticmethod
+    def mine(x, y):
+        """
+        Command the unit to mine at the specified coordinates.
+        """
+
+    @property
+    def flag():
+        """
+        Store a user-provided number in the unit for later use (for example, to "flag" this unit already was used).
+        """
+
+
 Unit = Unit()
 
 class Mem:
