@@ -45,8 +45,10 @@ def main():
         )
 
     if args.clipboard:
-            import ait
-            ait.copy(complete_masm)
+        import ait
+
+        ait.copy(complete_masm)
+
 
 if __name__ == "__main__":
     main()

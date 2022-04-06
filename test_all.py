@@ -718,7 +718,7 @@ def test_ubind():
     print __pyc_tmp_1
     printflush message1
     """
-    Unit.bind('alpha')
+    Unit.bind("alpha")
     print(Unit.x)
 
 
