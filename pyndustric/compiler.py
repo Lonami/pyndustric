@@ -706,7 +706,7 @@ class Compiler(ast.NodeVisitor):
         elif isinstance(node, ast.Subscript):
             # Memory is a special case because it's read, not sensed.
             # Accessing the attribute itself (e.g. "Mem.cell") shouldn't be a sensor either.
-            if isinstance(node.value, ast.Attribute) and node.value.value.id == 'Mem':
+            if isinstance(node.value, ast.Attribute) and node.value.value.id == "Mem":
                 cell = node.value.attr
                 val = self.as_value(node.slice)
                 self.ins_append(f"read {output} {cell} {val}")
