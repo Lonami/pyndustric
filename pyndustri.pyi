@@ -48,116 +48,172 @@ class Senseable(ABC):
     Type hints for things that can be sensed.
     """
 
+    @property
     def copper(self) -> int:
         """Amount of Copper stored or carried by the link."""
+    @property
     def lead(self) -> int:
         """Amount of Lead stored or carried by the link."""
+    @property
     def coal(self) -> int:
         """Amount of Coal stored or carried by the link."""
+    @property
     def graphite(self) -> int:
         """Amount of Graphite stored or carried by the link."""
+    @property
     def titanium(self) -> int:
         """Amount of Titanium stored or carried by the link."""
+    @property
     def thorium(self) -> int:
         """Amount of Thorium stored or carried by the link."""
+    @property
     def silicon(self) -> int:
         """Amount of Silicon stored or carried by the link."""
+    @property
     def plastanium(self) -> int:
         """Amount of Plastanium stored or carried by the link."""
+    @property
     def phase_fabric(self) -> int:
         """Amount of Phase Fabric stored or carried by the link."""
+    @property
     def surge_alloy(self) -> int:
         """Amount of Surge Alloy stored or carried by the link."""
+    @property
     def spore_pod(self) -> int:
         """Amount of Spore Pod stored or carried by the link."""
+    @property
     def sand(self) -> int:
         """Amount of Sand stored or carried by the link."""
+    @property
     def blast_compound(self) -> int:
         """Amount of Blast Compound stored or carried by the link."""
+    @property
     def pyratite(self) -> int:
         """Amount of Pyratite stored or carried by the link."""
+    @property
     def metaglass(self) -> int:
         """Amount of Metaglass stored or carried by the link."""
+    @property
     def scrap(self) -> int:
         """Amount of Scrap stored or carried by the link."""
+    @property
     def water(self) -> int:
         """Amount of Water stored or carried by the link."""
+    @property
     def slag(self) -> int:
         """Amount of Slag stored or carried by the link."""
+    @property
     def oil(self) -> int:
         """Amount of Oil stored or carried by the link."""
+    @property
     def cryofluid(self) -> int:
         """Amount of Cryofluid stored or carried by the link."""
+    @property
     def items(self) -> int:
         """The sum of all items contained or carried by the link."""
+    @property
     def first_item(self) -> Optional[Link]:
         """A link to the first contained item carried by the link, if any."""
+    @property
     def liquids(self) -> int:
         """The sum of all liquids contained or carried by the link."""
+    @property
     def power(self) -> int:
         """The current total power consumption by the link."""
+    @property
     def max_items(self) -> int:
         """How maximum amount of items the link can contain or carry."""
+    @property
     def max_liquids(self) -> int:
         """How maximum amount of liquids the link can contain or carry."""
+    @property
     def max_power(self) -> int:
         """The maximum amount of power the link can store."""
+    @property
     def power_stored(self) -> int:
         """The amount of power stored in the link."""
+    @property
     def power_capacity(self) -> int:
         """The amount of power the link can store."""
+    @property
     def power_in(self) -> int:
         """The net amount of power goiong into the link."""
+    @property
     def power_out(self) -> int:
         """The net amount of power goiong out of the link."""
+    @property
     def ammo(self) -> int:
         """The current amount of ammunition the current link has."""
+    @property
     def max_ammo(self) -> int:
         """The maximum amount of ammunition the current link has."""
+    @property
     def health(self) -> int:
         """The current health of the link."""
+    @property
     def max_health(self) -> int:
         """The maximum health of the link."""
+    @property
     def heat(self) -> int:
         """The current heat of the link."""
+    @property
     def efficiency(self) -> int:
         """The current efficiency of the link (base and boosts)."""
+    @property
     def rotation(self) -> int:
         """The current rotation of the link."""
+    @property
     def x(self) -> int:
         """The X logic tile coordinate of the link. Whole numbers are at the center of the tile."""
+    @property
     def y(self) -> int:
         """The Y logic tile coordinate of the link. Whole numbers are at the center of the tile."""
+    @property
     def shoot_x(self) -> int:
         """The X coordinate where the link is shooting to."""
+    @property
     def shoot_y(self) -> int:
         """The Y coordinate where the link is shooting to."""
+    @property
     def shooting(self) -> bool:
         """True if the link is currently shooting."""
+    @property
     def mine_x(self) -> int:
         """The X coordinate where the link is currently mining at."""
+    @property
     def mine_y(self) -> int:
         """The Y coordinate where the link is currently mining at."""
+    @property
     def mining(self) -> bool:
         """True if the link is currently mining"""
+    @property
     def team(self) -> int:
         """The team identifier to which the link belongs."""
+    @property
     def type(self) -> int:
         """The type of the link."""
+    @property
     def flag(self) -> int:
         """The custom flag variable stored in the link."""
+    @property
     def controlled(self) -> bool:
         """Is this link being controlled?"""
+    @property
     def commanded(self) -> bool:
         """Is this link being commanded?"""
+    @property
     def name(self) -> int:
         """The name of the link."""
+    @property
     def config(self) -> bool:
         """The configuration of the link."""
+    @property
     def payload(self) -> int:
         """The amount of payload the link is carrying."""
+    @property
     def payload_type(self) -> int:
         """The type of the payload."""
+    @property
     def enabled(self) -> bool:
         """Is this link enabled?"""
 
