@@ -460,8 +460,6 @@ class Compiler(ast.NodeVisitor):
         elif ns == "Unit":
             self.emit_unit_syscall(call)
         # Try to emit certain special calls if the method name is recognised, no matter the object.
-        elif self.emit_memory_syscall(call):
-            pass
         elif self.emit_control_syscall(call):
             pass
         else:
@@ -612,25 +610,6 @@ class Compiler(ast.NodeVisitor):
             self.ins_append(f"ubind @{unit}")
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
-
-    def emit_memory_syscall(self, node: ast.Call, output=None):
-        link = node.func.value.id
-        method = node.func.attr
-        if method == "read":
-            if len(node.args) != 1:
-                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
-
-            # When called in a standalone expression, read is a no-op (nowhere to assign).
-        elif method == "write":
-            if len(node.args) != 2:
-                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
-
-            index, value = map(self.as_value, node.args)
-            self.ins_append(f"write {value} {link} {index}")
-        else:
-            return False
-
-        return True
 
     def emit_control_syscall(self, node: ast.Call):
         link = node.func.value.id
@@ -819,11 +798,7 @@ class Compiler(ast.NodeVisitor):
             # Unit.radar()
             obj = node.func.value.id
             method = node.func.attr
-            if method == "read":
-                index = self.as_value(node.args[0])
-                self.ins_append(f"read {output} {obj} {index}")
-                return output
-            elif method == "radar":
+            if method == "radar":
                 return self.radar_instruction(output, obj, node)
 
         raise CompilerError(ERR_UNSUPPORTED_EXPR, node)
