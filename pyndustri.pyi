@@ -9,16 +9,16 @@ class Env:
     Access to special environmental variables.
     """
 
-    @staticmethod
+    @property
     def this():
         """Return the `Building` object representing this logic processor."""
-    @staticmethod
+    @property
     def x():
         """Return the `x` coordinate where `this` is located."""
-    @staticmethod
+    @property
     def y():
         """Return the `y` coordinate where `this` is located."""
-    @staticmethod
+    @property
     def counter():
         """
         Return the Program Counter (also known as Instruction Pointer).
@@ -28,18 +28,20 @@ class Env:
     @staticmethod
     def links() -> Iterator[Link]:
         """Used to iterate over all the links."""
-    @staticmethod
+    @property
     def link_count():
         """Return how many links there are connected to `this` logic processor."""
-    @staticmethod
+    @property
     def time():
         """Return the current UNIX timestamp, in milliseconds."""
-    @staticmethod
+    @property
     def width():
         """Return the width of the entire map, in tiles."""
-    @staticmethod
+    @property
     def height():
         """Return the height of the entire map, in tiles."""
+
+Env = Env()
 
 # https://github.com/Anuken/Mindustry/blob/e714d44/core/assets/bundles/bundle.properties#L979-L998
 # https://github.com/Anuken/Mindustry/blob/8bc349b/core/src/mindustry/logic/LAccess.java#L6-L47

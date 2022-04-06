@@ -66,11 +66,11 @@ Screen.poly(20, 50, 20, 100)
 Screen.flush()
 ```
 
-Built-in functions to access the environment, like time or links:
+Built-in properties to access the environment, like time or links:
 
 ```python
-current_time = Env.time()
-link_count = Env.link_count()
+current_time = Env.time
+link_count = Env.link_count
 ```
 
 Built-in functions to access sensors, like the amount of copper or current health:
