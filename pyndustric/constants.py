@@ -107,6 +107,7 @@ ENV_MAP = {
     "time": "@time",
     "width": "@mapw",
     "height": "@maph",
+    # @ipt is excluded (not very useful)
 }
 
 RES_MAP = {

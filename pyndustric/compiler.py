@@ -774,6 +774,11 @@ class Compiler(ast.NodeVisitor):
 
             # No need to sense the resource if we just want to grab it from Env.
             if obj == "Env":
+                if node.attr == "ips":
+                    # Special-case: instruction per second require a calculation
+                    self.ins_append(f"op mul {output} @ipt 60")
+                    return output
+
                 return _name_as_env(node.attr)
 
             # Unit is special-cased.

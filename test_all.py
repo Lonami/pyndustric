@@ -594,11 +594,12 @@ def test_env():
     set time @time
     set width @mapw
     set height @maph
-    set __pyc_it_28_16 0
-    jump 15 greaterThanEq __pyc_it_28_16 @links
-    getlink link __pyc_it_28_16
-    op add __pyc_it_28_16 __pyc_it_28_16 1
-    jump 11 always
+    op mul ips @ipt 60
+    set __pyc_it_30_16 0
+    jump 16 greaterThanEq __pyc_it_30_16 @links
+    getlink link __pyc_it_30_16
+    op add __pyc_it_30_16 __pyc_it_30_16 1
+    jump 12 always
     """
     cop = Env.copper
     this = Env.this
@@ -609,6 +610,7 @@ def test_env():
     time = Env.time
     width = Env.width
     height = Env.height
+    ips = Env.ips
     for link in Env.links():
         pass
 
