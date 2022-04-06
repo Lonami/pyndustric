@@ -189,6 +189,15 @@ class Compiler(ast.NodeVisitor):
             if len(node.targets) > 1:
                 for additional_target in node.targets[1:]:
                     self.ins_append(f"set {additional_target.id} {target.id}")
+
+        elif isinstance(target, ast.Attribute):
+            # Unit.flag = val
+            if target.value.id != "Unit" or target.attr != "flag":
+                raise CompilerError(ERR_COMPLEX_ASSIGN, node)
+
+            val = self.as_value(node.value)
+            self.ins_append(f"ucontrol flag {val} 0 0 0 0")
+
         elif isinstance(target, ast.Subscript):
             # Mem.cell[idx] = val
             if not isinstance(target.value, ast.Attribute) or target.value.value.id != "Mem":

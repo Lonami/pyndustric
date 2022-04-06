@@ -755,6 +755,18 @@ def test_unit_actions():
 
 
 @masm_test
+def test_unit_flag():
+    """
+    ucontrol flag 1 0 0 0 0
+    sensor __pyc_tmp_2 @unit @flag
+    print __pyc_tmp_2
+    printflush message1
+    """
+    Unit.flag = 1
+    print(Unit.flag)
+
+
+@masm_test
 def test_memory():
     """
     write 1 cell1 0

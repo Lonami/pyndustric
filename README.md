@@ -102,6 +102,7 @@ Unit.move(100, 200)
 
 if Unit.within(100, 200, 10):
     Unit.shoot(100, 200)
+    Unit.flag = 1
 ```
 
 Built-in class to access memory:
