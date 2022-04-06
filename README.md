@@ -62,6 +62,8 @@ Screen.rect(10, 10, 20, 40)
 
 Screen.color(50, 200, 50)
 Screen.poly(20, 50, 20, 100)
+
+Screen.flush()
 ```
 
 Built-in functions to access the environment, like time or links:
