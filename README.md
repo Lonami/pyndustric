@@ -89,6 +89,13 @@ for reactor in Env.links():
     reactor.enabled(safe)  # turn off all reactors with non-zero heat
 ```
 
+Built-in singleton to bind to units and use them:
+
+```python
+Unit.bind('alpha')
+print(Unit.x + Unit.y)
+```
+
 Custom function definitions:
 
 ```python
@@ -110,7 +117,7 @@ else:
 > **Note**: as of steam build 122.1, the processor state is not reset even if you import new code,
 > so functions which rely on a special stack pointer variable may behave strange if you import new
 > code. To fix this import empty code (which clears the instruction pointer) and then import the
-> real code, or upgrade your Mindustry version. [Original bug report][[ip-not-reset].
+> real code, or upgrade your Mindustry version. [Original bug report][ip-not-reset].
 
 ## Documentation
 

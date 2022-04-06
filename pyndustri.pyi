@@ -234,6 +234,31 @@ class Screen:
     def flush(display: str = None):
         """Flush the screen buffer to the display."""
 
+class Unit(Senseable):
+    """
+    The bound unit.
+
+    By default, this is not bound to anything. You should `bind` before using the other methods.
+
+    This unit should be used as a singleton. It is also senseable (you can use `Unit.x`, etc.).
+    """
+
+    @staticmethod
+    def bind(unit: str):
+        """
+        Bind to the next unit of the given type.
+
+        The available units types are:
+
+        * Mechas: mace, dagger, crawler, fortress, scepter, reign, vela, nova, pulsar, quasar.
+        * Legged: corvus, atrax, spiroct, arkyid, toxopid.
+        * Airborne: flare, eclipse, horizon, zenith, antumbra, mono, poly, mega, quad, oct.
+        * Naval: risso, minke, bryde, sei, omura, retusa, oxynoe, cyerce, aegires, navanax.
+        * Player: alpha, beta, gamma.
+        """
+
+Unit = Unit()
+
 def print(message: str, flush: Union[bool, str] = True):
     """
     Print a message. f-strings are supported and encouraged to do string formatting.

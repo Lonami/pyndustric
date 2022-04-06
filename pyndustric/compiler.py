@@ -447,6 +447,8 @@ class Compiler(ast.NodeVisitor):
         ns = call.func.value.id
         if ns == "Screen":
             self.emit_screen_syscall(call)
+        elif ns == "Unit":
+            self.emit_unit_syscall(call)
         # Try to emit certain special calls if the method name is recognised, no matter the object.
         elif self.emit_memory_syscall(call):
             pass
@@ -583,6 +585,24 @@ class Compiler(ast.NodeVisitor):
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
+    def emit_unit_syscall(self, node: ast.Call):
+        method = node.func.attr
+        if method == "bind":
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            if not isinstance(node.args[0], ast.Constant):
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            unit = node.args[0].value
+
+            if not isinstance(unit, str):
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self.ins_append(f"ubind @{unit}")
+        else:
+            raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+
     def emit_memory_syscall(self, node: ast.Call, output=None):
         link = node.func.value.id
         method = node.func.attr
@@ -663,6 +683,10 @@ class Compiler(ast.NodeVisitor):
             # No need to sense the resource if we just want to grab it from Env.
             if obj == "Env":
                 return _name_as_env(node.attr)
+
+            # Unit is special-cased
+            if obj == "Unit":
+                obj = "@unit"
 
             attr = _name_as_res(node.attr)
 

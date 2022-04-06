@@ -708,3 +708,20 @@ def test_memory():
 
     # If the read result is written to nowhere, it's a no-op, so not emitted.
     cell1.read(0)
+
+
+@masm_test
+def test_ubind():
+    """
+    ubind @alpha
+    sensor __pyc_tmp_1 @unit @x
+    print __pyc_tmp_1
+    printflush message1
+    """
+    Unit.bind('alpha')
+    print(Unit.x)
+
+
+def test_bad_ubind():
+    expect_err(pyndustric.ERR_BAD_SYSCALL_ARGS, "Unit.bind(42)")
+    expect_err(pyndustric.ERR_BAD_SYSCALL_ARGS, "Unit.bind('alpha', 'beta')")
