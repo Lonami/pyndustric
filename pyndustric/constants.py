@@ -97,9 +97,8 @@ BUILTIN_DEFS = {
 
 RADAR_ORDERS = {"min": "1", "True": "1", "1": "1", "max": "0", "False": "0", "0": "0"}
 
-# Map Pythonic resource names with non-standard resources (camelCase, not kebab-case).
-RES_MAP = {
-    # Environment-related
+# Map Pythonic environment and resource names with non-standard resources (camelCase, not kebab-case).
+ENV_MAP = {
     "this": "@this",
     "x": "@thisx",
     "y": "@thisy",
@@ -108,6 +107,9 @@ RES_MAP = {
     "time": "@time",
     "width": "@mapw",
     "height": "@maph",
+}
+
+RES_MAP = {
     # Resource-related
     "items": "@totalItems",
     "first_item": "@firstItem",
@@ -120,12 +122,34 @@ RES_MAP = {
     "power_capacity": "@powerNetCapacity",
     "power_in": "@powerNetIn",
     "power_out": "@powerNetOut",
+    "ammo": "@ammo",
     "max_ammo": "@ammoCapacity",
+    "health": "@health",
     "max_health": "@maxHealth",
+    "heat": "@heat",
+    "efficiency": "@efficiency",
+    "progress": "@progress",
+    "timescale": "@timescale",
+    "rotation": "@rotation",
+    "x": "@x",
+    "y": "@y",
     "shoot_x": "@shootX",
     "shoot_y": "@shootY",
+    "size": "@size",
+    "dead": "@dead",
+    "range": "@range",
+    "shooting": "@shooting",
+    "boosting": "@boosting",
     "mine_x": "@mineX",
     "mine_y": "@mineY",
+    "mining": "@mining",
+    "team": "@team",
+    "type": "@type",
+    "flag": "@flag",
+    "controlled": "@controlled",
+    "controller": "@controller",
+    "commanded": "@commanded",
+    "name": "@name",
     "payload": "@payloadCount",
     "payload_type": "@payloadType",
 }
