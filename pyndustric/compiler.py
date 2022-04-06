@@ -189,6 +189,16 @@ class Compiler(ast.NodeVisitor):
             if len(node.targets) > 1:
                 for additional_target in node.targets[1:]:
                     self.ins_append(f"set {additional_target.id} {target.id}")
+        elif isinstance(target, ast.Subscript):
+            # Mem.cell[idx] = val
+            if not isinstance(target.value, ast.Attribute) or target.value.value.id != "Mem":
+                raise CompilerError(ERR_COMPLEX_ASSIGN, node)
+
+            cell = target.value.attr
+            idx = self.as_value(target.slice)
+            val = self.as_value(node.value)
+
+            self.ins_append(f"write {val} {cell} {idx}")
         elif isinstance(target, ast.Tuple) and len(node.targets) == 1:
             # a, b = c, d
             if not isinstance(node.value, ast.Tuple) or len(target.elts) != len(node.value.elts):
@@ -694,6 +704,14 @@ class Compiler(ast.NodeVisitor):
             return output
 
         elif isinstance(node, ast.Subscript):
+            # Memory is a special case because it's read, not sensed.
+            # Accessing the attribute itself (e.g. "Mem.cell") shouldn't be a sensor either.
+            if isinstance(node.value, ast.Attribute) and node.value.value.id == 'Mem':
+                cell = node.value.attr
+                val = self.as_value(node.slice)
+                self.ins_append(f"read {output} {cell} {val}")
+                return output
+
             # container1[dynamic_res]
             # 'some_object'['some_resource']
             obj = self.as_value(node.value).strip('"')

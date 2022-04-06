@@ -696,21 +696,6 @@ def test_control():
 
 
 @masm_test
-def test_memory():
-    """
-    set dst 2
-    read value cell1 1
-    write value cell1 dst
-    """
-    dst = 2
-    value = cell1.read(1)
-    cell1.write(dst, value)
-
-    # If the read result is written to nowhere, it's a no-op, so not emitted.
-    cell1.read(0)
-
-
-@masm_test
 def test_ubind():
     """
     ubind @alpha
@@ -725,3 +710,31 @@ def test_ubind():
 def test_bad_ubind():
     expect_err(pyndustric.ERR_BAD_SYSCALL_ARGS, "Unit.bind(42)")
     expect_err(pyndustric.ERR_BAD_SYSCALL_ARGS, "Unit.bind('alpha', 'beta')")
+
+
+@masm_test
+def test_memory():
+    """
+    write 1 cell1 0
+    write 1 cell1 1
+    set i 2
+    jump 13 greaterThanEq i 64
+    op sub __pyc_tmp_10 i 2
+    read __pyc_tmp_9 cell1 __pyc_tmp_10
+    op sub __pyc_tmp_14 i 1
+    read __pyc_tmp_13 cell1 __pyc_tmp_14
+    op add __pyc_tmp_8 __pyc_tmp_9 __pyc_tmp_13
+    write __pyc_tmp_8 cell1 i
+    op add i i 1
+    jump 4 always
+    read __pyc_tmp_17 cell1 63
+    print __pyc_tmp_17
+    printflush message1
+    """
+    Mem.cell1[0] = 1
+    Mem.cell1[1] = 1
+
+    for i in range(2, 64):
+        Mem.cell1[i] = Mem.cell1[i - 2] + Mem.cell1[i - 1]
+
+    print(Mem.cell1[63])

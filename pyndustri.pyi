@@ -259,6 +259,13 @@ class Unit(Senseable):
 
 Unit = Unit()
 
+class Mem:
+    """
+    Access to memory.
+
+    Note that `cell1` is used for function calls (but is unused otherwise).
+    """
+
 def print(message: str, flush: Union[bool, str] = True):
     """
     Print a message. f-strings are supported and encouraged to do string formatting.

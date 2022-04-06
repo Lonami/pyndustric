@@ -96,6 +96,19 @@ Unit.bind('alpha')
 print(Unit.x + Unit.y)
 ```
 
+Built-in class to access memory:
+
+```python
+Mem.cell1[0] = 1
+Mem.cell1[1] = 1
+
+for i in range(2, 64):
+    Mem.cell1[i] = Mem.cell1[i - 2] + Mem.cell1[i - 1]
+
+# cell1 now has the Fibonacci sequence! (the first few numbers, at least)
+print(Mem.cell1[63])
+```
+
 Custom function definitions:
 
 ```python
