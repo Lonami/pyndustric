@@ -583,6 +583,16 @@ def test_print():
 
 
 @masm_test
+def test_sleep():
+    """
+    op mul __sleep @ipt 500
+    op sub __sleep __sleep 33.33333333333333
+    jump 2 greaterThan __sleep 0
+    """
+    sleep(500)
+
+
+@masm_test
 def test_env():
     """
     set cop @copper

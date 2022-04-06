@@ -453,10 +453,12 @@ class Compiler(ast.NodeVisitor):
         if not isinstance(call, ast.Call):
             raise CompilerError(ERR_UNSUPPORTED_EXPR, node)
 
-        # `print`, unlike the rest of syscalls, has no namespace
+        # `print` and `sleep`, unlike the rest of syscalls, has no namespace
         if isinstance(call.func, ast.Name):
             if call.func.id == "print":
                 return self.emit_print_syscall(call)
+            elif call.func.id == "sleep":
+                return self.emit_sleep_syscall(call)
             else:
                 return self.as_value(call)
 
@@ -512,6 +514,23 @@ class Compiler(ast.NodeVisitor):
             self.ins_append(f"printflush {flush}")
         elif flush:
             self.ins_append(f"printflush message1")
+
+    def emit_sleep_syscall(self, node: ast.Call):
+        if len(node.args) != 1:
+            raise CompilerError(ERR_BAD_SYSCALL_ARGS)
+
+        arg = node.args[0]
+        ms = self.as_value(arg)
+
+        sleep_label = _Label()
+
+        self.ins_append(f"op mul __sleep @ipt {ms}")
+        self.ins_append(sleep_label)
+        # 2 instructions (jump and sub), scaled to milliseconds (* 1000), divided by the ticks per second (/ 60)
+        # We could scale __sleep by 60 to avoid this ugly inexact number, but that would add another instruction of overhead.
+        # This is as small as we can get while being reasonably accurate.
+        self.ins_append("op sub __sleep __sleep 33.33333333333333")
+        self.ins_append(_Jump(sleep_label, "greaterThan __sleep 0"))
 
     def emit_screen_syscall(self, node: ast.Call):
         method = node.func.attr

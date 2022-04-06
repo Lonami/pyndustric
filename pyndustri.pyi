@@ -431,3 +431,10 @@ def print(message: str, flush: Union[bool, str] = True):
 
     `flush` may be a boolean indicating whether to emit `printflush` or not, or the name of the message.
     """
+
+def sleep(ms: int):
+    """
+    Sleep for the given amount of milliseconds.
+
+    This is a processor-independant way of delaying execution for an exact amount of time.
+    """
