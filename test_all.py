@@ -445,6 +445,39 @@ def test_break():
     z = 1
 
 
+@masm_test
+def test_continue():
+    """
+    set a 0
+    set x 10
+    jump 9 equal x 0
+    op sub x x 1
+    jump 7 notEqual x 5
+    jump 4 always
+    op add a a 1
+    jump 4 notEqual x 0
+    set b 0
+    set x 0
+    jump 17 greaterThanEq x 10
+    jump 14 notEqual x 5
+    jump 15 always
+    op add b b 1
+    op add x x 1
+    jump 11 always
+    """
+    a = 0
+    x = 10
+    while x:
+        x = x - 1
+        if x == 5:
+            continue
+        a += 1
+
+    b = 0
+    for x in range(10):
+        if x == 5:
+            continue
+        b += 1
 
 
 @masm_test
