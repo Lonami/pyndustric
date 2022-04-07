@@ -794,6 +794,7 @@ class Compiler(ast.NodeVisitor):
 
             while len(outputs) != 4:
                 outputs.append('_')
+            outputs.insert(2, outputs.pop(0))  # we do "found x y building" but the game expects "x y found building"
             output = ' '.join(outputs)
 
             enemy = 'true' if node.args[0].value == 'enemy' else 'false'

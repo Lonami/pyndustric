@@ -922,10 +922,10 @@ def test_unit_flag():
 @masm_test
 def test_unit_locate():
     """
-    ulocate building core false @copper found _ _ _
-    ulocate ore core false @lead found x _ _
-    ulocate spawn core true @copper found x y _
-    ulocate damaged core true @copper found x y building
+    ulocate building core false @copper _ _ found _
+    ulocate ore core false @lead x _ found _
+    ulocate spawn core true @copper x y found _
+    ulocate damaged core true @copper x y found building
     """
     found, = Unit.locate('ally', building='core')
     found, x = Unit.locate('ally', ore=Env.lead)
