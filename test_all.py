@@ -446,6 +446,42 @@ def test_break():
 
 
 @masm_test
+def test_nested_break():
+    """
+    set a 0
+    set b 0
+    set i 10
+    jump 17 equal i 0
+    op sub i i 1
+    set j 10
+    jump 13 equal j 0
+    op sub j j 1
+    jump 11 notEqual j 5
+    jump 13 always
+    op add b b 1
+    jump 8 notEqual j 0
+    jump 15 notEqual i 5
+    jump 17 always
+    op add a a 1
+    jump 5 notEqual i 0
+    """
+    a = 0
+    b = 0
+    i = 10
+    while i:
+        i -= 1
+        j = 10
+        while j:
+            j -= 1
+            if j == 5:
+                break
+            b += 1
+        if i == 5:
+            break
+        a += 1
+
+
+@masm_test
 def test_continue():
     """
     set a 0
@@ -478,6 +514,42 @@ def test_continue():
         if x == 5:
             continue
         b += 1
+
+
+@masm_test
+def test_nested_continue():
+    """
+    set a 0
+    set b 0
+    set i 10
+    jump 17 equal i 0
+    op sub i i 1
+    set j 10
+    jump 13 equal j 0
+    op sub j j 1
+    jump 11 notEqual j 5
+    jump 8 always
+    op add b b 1
+    jump 8 notEqual j 0
+    jump 15 notEqual i 5
+    jump 5 always
+    op add a a 1
+    jump 5 notEqual i 0
+    """
+    a = 0
+    b = 0
+    i = 10
+    while i:
+        i -= 1
+        j = 10
+        while j:
+            j -= 1
+            if j == 5:
+                continue
+            b += 1
+        if i == 5:
+            continue
+        a += 1
 
 
 @masm_test
