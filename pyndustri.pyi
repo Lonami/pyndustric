@@ -418,6 +418,26 @@ class Unit(Senseable):
         Store a user-provided number in the unit for later use (for example, to "flag" this unit already was used).
         """
 
+    @staticmethod
+    def locate(team: str, *, building=None, ore=None, spawn=None, damaged=None):
+        """
+        Locate an `'ally'` or '`enemy`' structure near the bound unit.
+
+        The return value accomodates to the left-hand side as follows:
+
+        found, = Unit.locate('ally', building='core')  # was the ally core found?
+        #    ^ this comma is important! locate always returns a tuple and we need to unpack it
+
+        found, x = Unit.locate('enemy', building='core')  # the x coordinate of the enemy core if found
+        found, x, y = Unit.locate('enemy', building='core')  # the x and y coordinate of the enemy core if found
+        found, x, y, building = Unit.locate('enemy', building='core')  # the x and y coordinate of the enemy core if found, and specific building type
+
+        Exactly one keyword argument is allowed.
+
+        Building can be any literal of: core, storage, generator, turret, factory, repair, rally (command center), battery, resupply, reactor.
+        Ore can be one of those in `Env` or in a variable.
+        Both spawn and damaged can only be set to `True`.
+        """
 
 Unit = Unit()
 

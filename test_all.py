@@ -131,7 +131,7 @@ def test_err_too_long():
 def test_err_bad_tuple():
     expect_err(pyndustric.ERR_UNSUPPORTED_EXPR, "x = 1, 2")
     expect_err(pyndustric.ERR_BAD_TUPLE_ASSIGN, "x, y = 1")
-    expect_err(pyndustric.ERR_BAD_TUPLE_ASSIGN, "x, y = foo()")
+    expect_err(pyndustric.ERR_UNSUPPORTED_SYSCALL, "x, y = foo()")
     expect_err(pyndustric.ERR_BAD_TUPLE_ASSIGN, "x, y = a, b, c")
 
 
@@ -918,6 +918,19 @@ def test_unit_flag():
     Unit.flag = 1
     print(Unit.flag)
 
+
+@masm_test
+def test_unit_locate():
+    """
+    ulocate building core false @copper found _ _ _
+    ulocate ore core false @lead found x _ _
+    ulocate spawn core true @copper found x y _
+    ulocate damaged core true @copper found x y building
+    """
+    found, = Unit.locate('ally', building='core')
+    found, x = Unit.locate('ally', ore=Env.lead)
+    found, x, y = Unit.locate('enemy', spawn='core')
+    found, x, y, building = Unit.locate('enemy', damaged='core')
 
 @masm_test
 def test_memory():

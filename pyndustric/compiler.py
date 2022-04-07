@@ -212,6 +212,11 @@ class Compiler(ast.NodeVisitor):
             self.ins_append(f"write {val} {cell} {idx}")
         elif isinstance(target, ast.Tuple) and len(node.targets) == 1:
             # a, b = c, d
+            # Certain system calls (like Unit.locate()) can return tuples; check those if we're assigning a call and not a tuple
+            if isinstance(node.value, ast.Call):
+                self.emit_tuple_syscall(node.value, [elt.id for elt in target.elts])
+                return
+
             if not isinstance(node.value, ast.Tuple) or len(target.elts) != len(node.value.elts):
                 raise CompilerError(ERR_BAD_TUPLE_ASSIGN, node)
 
@@ -745,6 +750,73 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
     def emit_control_syscall(self, node: ast.Call):
+        link = node.func.value.id
+        method = node.func.attr
+        if method == "enabled":
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            enabled = self.as_value(node.args[0])
+            self.ins_append(f"control enabled {link} {enabled}")
+        elif method == "shoot":
+            if len(node.args) == 2:
+                x, y, enabled = *map(self.as_value, node.args), 1
+            elif len(node.args) == 3:
+                x, y, enabled = map(self.as_value, node.args)
+            else:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self.ins_append(f"control shoot {link} {x} {y} {enabled}")
+        elif method == "ceasefire":
+            if len(node.args) != 0:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self.ins_append(f"control shoot {link} 0 0 0")
+        else:
+            return False
+
+        return True
+
+    def emit_tuple_syscall(self, node: ast.Call, outputs: list):
+        # All of them currently are of the form Sys.call()
+        if not isinstance(node.func, ast.Attribute):
+            raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+
+        if node.func.value.id == 'Unit' and node.func.attr == 'locate':
+            if len(outputs) not in (1, 2, 3, 4):
+                raise CompilerError(ERR_BAD_TUPLE_ASSIGN, node)
+
+            if len(node.args) != 1 or len(node.keywords) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            if not isinstance(node.args[0], ast.Constant) or node.args[0].value not in ('ally', 'enemy'):
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            while len(outputs) != 4:
+                outputs.append('_')
+            output = ' '.join(outputs)
+
+            enemy = 'true' if node.args[0].value == 'enemy' else 'false'
+            kind = node.keywords[0]
+
+            if kind.arg == 'building':
+                if not isinstance(kind.value, ast.Constant):
+                    raise CompilerError(ERR_BAD_SYSCALL_ARGS, kind.value)
+
+                self.ins_append(f'ulocate building {kind.value.value} {enemy} @copper {output}')
+            elif kind.arg == 'ore':
+                ore = self.as_value(kind.value)
+                self.ins_append(f'ulocate ore core {enemy} {ore} {output}')
+            elif kind.arg == 'spawn':
+                self.ins_append(f'ulocate spawn core {enemy} @copper {output}')
+            elif kind.arg == 'damaged':
+                self.ins_append(f'ulocate damaged core {enemy} @copper {output}')
+            else:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+        else:
+            raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+
+
         link = node.func.value.id
         method = node.func.attr
         if method == "enabled":
