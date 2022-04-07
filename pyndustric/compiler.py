@@ -136,7 +136,9 @@ class Compiler(ast.NodeVisitor):
         self._epilogue = None  # current function's epilogue label
         self._functions = {}
         self._tmp_var_counter = 0
-        self._scope_start_label = []  # needed for continue to know its previous label to jump to; works like a stack
+        self._scope_start_label = (
+            []
+        )  # needed for continue to know its previous label to jump to; works like a stack
         self._scope_end_label = []  # needed for break to know its next label to jump to; works like a stack
 
     def ins_append(self, ins):
@@ -782,41 +784,42 @@ class Compiler(ast.NodeVisitor):
         if not isinstance(node.func, ast.Attribute):
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
-        if node.func.value.id == 'Unit' and node.func.attr == 'locate':
+        if node.func.value.id == "Unit" and node.func.attr == "locate":
             if len(outputs) not in (1, 2, 3, 4):
                 raise CompilerError(ERR_BAD_TUPLE_ASSIGN, node)
 
             if len(node.args) != 1 or len(node.keywords) != 1:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
-            if not isinstance(node.args[0], ast.Constant) or node.args[0].value not in ('ally', 'enemy'):
+            if not isinstance(node.args[0], ast.Constant) or node.args[0].value not in ("ally", "enemy"):
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
             while len(outputs) != 4:
-                outputs.append('_')
-            outputs.insert(2, outputs.pop(0))  # we do "found x y building" but the game expects "x y found building"
-            output = ' '.join(outputs)
+                outputs.append("_")
+            outputs.insert(
+                2, outputs.pop(0)
+            )  # we do "found x y building" but the game expects "x y found building"
+            output = " ".join(outputs)
 
-            enemy = 'true' if node.args[0].value == 'enemy' else 'false'
+            enemy = "true" if node.args[0].value == "enemy" else "false"
             kind = node.keywords[0]
 
-            if kind.arg == 'building':
+            if kind.arg == "building":
                 if not isinstance(kind.value, ast.Constant):
                     raise CompilerError(ERR_BAD_SYSCALL_ARGS, kind.value)
 
-                self.ins_append(f'ulocate building {kind.value.value} {enemy} @copper {output}')
-            elif kind.arg == 'ore':
+                self.ins_append(f"ulocate building {kind.value.value} {enemy} @copper {output}")
+            elif kind.arg == "ore":
                 ore = self.as_value(kind.value)
-                self.ins_append(f'ulocate ore core {enemy} {ore} {output}')
-            elif kind.arg == 'spawn':
-                self.ins_append(f'ulocate spawn core {enemy} @copper {output}')
-            elif kind.arg == 'damaged':
-                self.ins_append(f'ulocate damaged core {enemy} @copper {output}')
+                self.ins_append(f"ulocate ore core {enemy} {ore} {output}")
+            elif kind.arg == "spawn":
+                self.ins_append(f"ulocate spawn core {enemy} @copper {output}")
+            elif kind.arg == "damaged":
+                self.ins_append(f"ulocate damaged core {enemy} @copper {output}")
             else:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
-
 
         link = node.func.value.id
         method = node.func.attr

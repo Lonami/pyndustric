@@ -413,7 +413,6 @@ def test_for_negative():
         y = x + x
 
 
-
 @masm_test
 def test_break():
     """
@@ -897,10 +896,10 @@ def test_unit_actions():
     Unit.shoot()
     Unit.shoot(9, 10)
     Unit.ceasefire()
-    Unit.fetch('container1', 'copper')
-    Unit.fetch('container1', 'copper', 11)
-    Unit.store('container1')
-    Unit.store('container1', 12)
+    Unit.fetch("container1", "copper")
+    Unit.fetch("container1", "copper", 11)
+    Unit.store("container1")
+    Unit.store("container1", 12)
     Unit.lift()
     Unit.carry()
     Unit.drop()
@@ -927,10 +926,11 @@ def test_unit_locate():
     ulocate spawn core true @copper x y found _
     ulocate damaged core true @copper x y found building
     """
-    found, = Unit.locate('ally', building='core')
-    found, x = Unit.locate('ally', ore=Env.lead)
-    found, x, y = Unit.locate('enemy', spawn='core')
-    found, x, y, building = Unit.locate('enemy', damaged='core')
+    (found,) = Unit.locate("ally", building="core")
+    found, x = Unit.locate("ally", ore=Env.lead)
+    found, x, y = Unit.locate("enemy", spawn="core")
+    found, x, y, building = Unit.locate("enemy", damaged="core")
+
 
 @masm_test
 def test_memory():
