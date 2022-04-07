@@ -677,12 +677,13 @@ class Compiler(ast.NodeVisitor):
             self.ins_append("ucontrol pathfind 0 0 0 0 0")
 
         elif method == "shoot":
-            if len(node.args) != 2:
+            if len(node.args) == 0:
+                self.ins_append(f"ucontrol targetp @unit 1 0 0 0")
+            elif len(node.args) == 2:
+                x, y = map(self.as_value, node.args)
+                self.ins_append(f"ucontrol target {x} {y} 1 0 0")
+            else:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
-
-            # Not sure how targetp (unit shoot) works... so that's not implemented.
-            x, y = map(self.as_value, node.args)
-            self.ins_append(f"ucontrol target {x} {y} 1 0 0")
 
         elif method == "ceasefire":
             if len(node.args) != 0:

@@ -735,6 +735,7 @@ def test_unit_actions():
     ucontrol boost 1 0 0 0 0
     ucontrol boost 0 0 0 0 0
     ucontrol pathfind 0 0 0 0 0
+    ucontrol targetp @unit 1 0 0 0
     ucontrol target 9 10 1 0 0
     ucontrol target 0 0 0 0 0
     ucontrol itemTake from item amount 0 0
@@ -754,6 +755,7 @@ def test_unit_actions():
     Unit.boost(1)
     Unit.boost(0)
     Unit.pathfind()
+    Unit.shoot()
     Unit.shoot(9, 10)
     Unit.ceasefire()
     Unit.fetch('container1', 'copper')

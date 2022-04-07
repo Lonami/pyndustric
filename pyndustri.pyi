@@ -362,9 +362,12 @@ class Unit(Senseable):
         """
 
     @staticmethod
-    def shoot(self, x: int, y: int):  # target
+    def shoot(self, x: int = None, y: int = None):  # target
         """
         Command the unit to shoot to the specified coordinates. Won't do anything if the coordinates are out of reach.
+
+        If no coordinates are given, the unit will shoot at its feet (useful for units such as horizon which drop bombs).
+        Note that horizon must be in movement for it to shoot.
         """
 
     @staticmethod
