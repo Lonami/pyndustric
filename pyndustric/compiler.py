@@ -136,6 +136,7 @@ class Compiler(ast.NodeVisitor):
         self._epilogue = None  # current function's epilogue label
         self._functions = {}
         self._tmp_var_counter = 0
+        self._scope_end_label = []  # needed for break to know its next label to jump to; works like a stack
 
     def ins_append(self, ins):
         if not isinstance(ins, _Instruction):
@@ -322,13 +323,13 @@ class Compiler(ast.NodeVisitor):
     def visit_While(self, node):
         """This will be called for any* while loop."""
         body_label = _Label()
-        end_label = _Label()
-        self.conditional_jump(end_label, node.test, jump_if_test=False)
+        self._scope_end_label.append(_Label())
+        self.conditional_jump(self._scope_end_label[-1], node.test, jump_if_test=False)
         self.ins_append(body_label)
         for subnode in node.body:
             self.visit(subnode)
         self.conditional_jump(body_label, node.test, jump_if_test=True)
-        self.ins_append(end_label)
+        self.ins_append(self._scope_end_label.pop())
 
     def visit_For(self, node):
         target = node.target
@@ -368,13 +369,13 @@ class Compiler(ast.NodeVisitor):
 
         self.ins_append(f"set {it} {start}")
 
-        end_label = _Label()
+        self._scope_end_label.append(_Label())
         condition = _Label()
         self.ins_append(condition)
         if backwards:
-            self.ins_append(_Jump(end_label, f"lessThanEq {it} {end}"))
+            self.ins_append(_Jump(self._scope_end_label[-1], f"lessThanEq {it} {end}"))
         else:
-            self.ins_append(_Jump(end_label, f"greaterThanEq {it} {end}"))
+            self.ins_append(_Jump(self._scope_end_label[-1], f"greaterThanEq {it} {end}"))
 
         self._ins.extend(inject)
         for subnode in node.body:
@@ -382,7 +383,10 @@ class Compiler(ast.NodeVisitor):
 
         self.ins_append(f"op add {it} {it} {step}")
         self.ins_append(_Jump(condition, "always"))
-        self.ins_append(end_label)
+        self.ins_append(self._scope_end_label.pop())
+
+    def visit_Break(self, node):
+        self.ins_append(_Jump(self._scope_end_label[-1], "always"))
 
     def visit_FunctionDef(self, node):
         # TODO forbid recursion (or implement it by storing and restoring everything from stack)

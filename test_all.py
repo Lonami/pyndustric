@@ -413,6 +413,40 @@ def test_for_negative():
         y = x + x
 
 
+
+@masm_test
+def test_break():
+    """
+    set x 10
+    jump 7 equal x 0
+    op sub x x 1
+    jump 6 notEqual x 5
+    jump 7 always
+    jump 3 notEqual x 0
+    set z 1
+    set x 0
+    jump 14 greaterThanEq x 10
+    jump 12 notEqual x 5
+    jump 14 always
+    op add x x 1
+    jump 9 always
+    set z 1
+    """
+    x = 10
+    while x:
+        x = x - 1
+        if x == 5:
+            break
+    z = 1
+
+    for x in range(10):
+        if x == 5:
+            break
+    z = 1
+
+
+
+
 @masm_test
 def test_def():
     # TODO cells can't store strings, test that no fn args are
