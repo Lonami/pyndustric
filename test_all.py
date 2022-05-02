@@ -8,6 +8,9 @@ import sys
 import tempfile
 
 
+_REG_TMP_RE = re.compile(r'\b' + pyndustric.REG_TMP_FMT.replace('{}', r'(\w+)') + r'\b')
+
+
 def as_masm(source):
     # Dedent expected mlog source by removing all leading whitespace
     return "set __pyc_sp 0\n" + re.sub(r"^\s+", "", source.strip(), flags=re.MULTILINE) + "\nend\n"
@@ -19,6 +22,10 @@ def masm_test(source_func):
 
     The body of the wrapped function will be compiled, and this masm output will be compared
     against the function's docstring, which should contain the *expected* masm output.
+
+    The special value `%tmpD`, where D is an integer, will be replaced by the matching `REG_TMP_FMT`.
+    The temporary names are ordered by time of appearance (meaning `__pyc_tmp_2` can be `%tmp0` and
+    `__pyc_tmp_1` be `%tmp1` if they appear in this order in the generated masm).
     """
     dbg_name = f"{source_func.__name__}:{inspect.currentframe().f_back.f_lineno}"
 
@@ -27,6 +34,16 @@ def masm_test(source_func):
         assert source_func.__doc__ is not None, "bad `masm_test` usage; def should have docstring"
         expected = as_masm(source_func.__doc__)
         masm = pyndustric.Compiler().compile(source_func)
+
+        tmp = 0
+        while True:
+            match = _REG_TMP_RE.search(masm)
+            if not match:
+                break
+
+            masm = re.sub(rf'\b{match[0]}\b', f'%tmp{tmp}', masm)
+            tmp += 1
+
         assert masm == expected, f"bad masm for {dbg_name}\n{masm}"
 
     return wrapped
@@ -246,12 +263,12 @@ def test_builtin_defs():
 @masm_test
 def test_complex_assign():
     """
-    op mul __pyc_tmp_1 2 x
-    op add a __pyc_tmp_1 1
-    op mul __pyc_tmp_6 x x
-    op mul __pyc_tmp_9 y y
-    op add __pyc_tmp_5 __pyc_tmp_6 __pyc_tmp_9
-    op sqrt d __pyc_tmp_5
+    op mul %tmp0 2 x
+    op add a %tmp0 1
+    op mul %tmp1 x x
+    op mul %tmp2 y y
+    op add %tmp3 %tmp1 %tmp2
+    op sqrt d %tmp3
     """
     a = 2 * x + 1
     d = sqrt(x * x + y * y)
@@ -271,9 +288,9 @@ def test_aug_assignments():
 def test_complex_aug_assig():
     """
     set x 1
-    op add __pyc_tmp_2 1 2
-    op mul __pyc_tmp_1 __pyc_tmp_2 3
-    op add x x __pyc_tmp_1
+    op add %tmp0 1 2
+    op mul %tmp1 %tmp0 3
+    op add x x %tmp1
     """
     x = 1
     x += (1 + 2) * 3
@@ -608,13 +625,13 @@ def test_multi_call():
     op add __pyc_sp __pyc_sp 1
     write @counter cell1 __pyc_sp
     jump 2 always
-    set __pyc_tmp_2 __pyc_ret
+    set %tmp0 __pyc_ret
     write 2 cell1 __pyc_sp
     op add __pyc_sp __pyc_sp 1
     write @counter cell1 __pyc_sp
     jump 2 always
-    set __pyc_tmp_4 __pyc_ret
-    op add x __pyc_tmp_2 __pyc_tmp_4
+    set %tmp1 __pyc_ret
+    op add x %tmp0 %tmp1
     """
 
     def f(i):
@@ -633,14 +650,14 @@ def test_complex_call():
     set __pyc_ret i
     jump 7 always
     op add @counter __pyc_rc_0 1
-    op add __pyc_tmp_5 2 3
-    write __pyc_tmp_5 cell1 __pyc_sp
+    op add %tmp0 2 3
+    write %tmp0 cell1 __pyc_sp
     op add __pyc_sp __pyc_sp 1
     write @counter cell1 __pyc_sp
     jump 2 always
-    set __pyc_tmp_4 __pyc_ret
-    op mul __pyc_tmp_2 1 __pyc_tmp_4
-    op add x __pyc_tmp_2 4
+    set %tmp1 __pyc_ret
+    op mul %tmp2 1 %tmp1
+    op add x %tmp2 4
     """
 
     def f(i):
@@ -651,7 +668,7 @@ def test_complex_call():
 
 @masm_test
 def test_def_sideeffects():
-    # TODO detect this unnecessary use of __pyc_tmp_3 and optimize it away
+    # TODO detect this unnecessary use of %tmp0 and optimize it away
     """
     jump 6 always
     read __pyc_rc_0 cell1 __pyc_sp
@@ -660,7 +677,7 @@ def test_def_sideeffects():
     op add @counter __pyc_rc_0 1
     write @counter cell1 __pyc_sp
     jump 2 always
-    set __pyc_tmp_2 __pyc_ret
+    set %tmp0 __pyc_ret
     """
 
     def foo():
@@ -671,7 +688,7 @@ def test_def_sideeffects():
 
 @masm_test
 def test_def_call_as_call_arg():
-    # TODO detect this unnecessary use of __pyc_tmp_3 and optimize it away
+    # TODO detect this unnecessary use of %tmp0 and optimize it away
     """
     jump 9 always
     read __pyc_rc_0 cell1 __pyc_sp
@@ -685,8 +702,8 @@ def test_def_call_as_call_arg():
     op add __pyc_sp __pyc_sp 1
     write @counter cell1 __pyc_sp
     jump 2 always
-    set __pyc_tmp_3 __pyc_ret
-    write __pyc_tmp_3 cell1 __pyc_sp
+    set %tmp0 __pyc_ret
+    write %tmp0 cell1 __pyc_sp
     op add __pyc_sp __pyc_sp 1
     write @counter cell1 __pyc_sp
     jump 2 always
@@ -790,9 +807,9 @@ def test_sensor_subscript():
 @masm_test
 def test_sensor_special_names():
     """
-    sensor __pyc_tmp_1 duo1 @health
-    sensor __pyc_tmp_2 duo1 @maxHealth
-    op div health __pyc_tmp_1 __pyc_tmp_2
+    sensor %tmp0 duo1 @health
+    sensor %tmp1 duo1 @maxHealth
+    op div health %tmp0 %tmp1
     """
     health = duo1.health / duo1.max_health
 
@@ -849,8 +866,8 @@ def test_control():
 def test_ubind():
     """
     ubind @alpha
-    sensor __pyc_tmp_1 @unit @x
-    print __pyc_tmp_1
+    sensor %tmp0 @unit @x
+    print %tmp0
     printflush message1
     """
     Unit.bind("alpha")
@@ -910,8 +927,8 @@ def test_unit_actions():
 def test_unit_flag():
     """
     ucontrol flag 1 0 0 0 0
-    sensor __pyc_tmp_2 @unit @flag
-    print __pyc_tmp_2
+    sensor %tmp0 @unit @flag
+    print %tmp0
     printflush message1
     """
     Unit.flag = 1
@@ -939,16 +956,16 @@ def test_memory():
     write 1 cell1 1
     set i 2
     jump 13 greaterThanEq i 64
-    op sub __pyc_tmp_10 i 2
-    read __pyc_tmp_9 cell1 __pyc_tmp_10
-    op sub __pyc_tmp_14 i 1
-    read __pyc_tmp_13 cell1 __pyc_tmp_14
-    op add __pyc_tmp_8 __pyc_tmp_9 __pyc_tmp_13
-    write __pyc_tmp_8 cell1 i
+    op sub %tmp0 i 2
+    read %tmp1 cell1 %tmp0
+    op sub %tmp2 i 1
+    read %tmp3 cell1 %tmp2
+    op add %tmp4 %tmp1 %tmp3
+    write %tmp4 cell1 i
     op add i i 1
     jump 4 always
-    read __pyc_tmp_17 cell1 63
-    print __pyc_tmp_17
+    read %tmp5 cell1 63
+    print %tmp5
     printflush message1
     """
     Mem.cell1[0] = 1
