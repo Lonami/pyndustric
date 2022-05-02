@@ -8,7 +8,7 @@ import sys
 import tempfile
 
 
-_REG_TMP_RE = re.compile(r'\b' + pyndustric.REG_TMP_FMT.replace('{}', r'(\w+)') + r'\b')
+_REG_TMP_RE = re.compile(r"\b" + pyndustric.REG_TMP_FMT.replace("{}", r"(\w+)") + r"\b")
 
 
 def as_masm(source):
@@ -41,7 +41,7 @@ def masm_test(source_func):
             if not match:
                 break
 
-            masm = re.sub(rf'\b{match[0]}\b', f'%tmp{tmp}', masm)
+            masm = re.sub(rf"\b{match[0]}\b", f"%tmp{tmp}", masm)
             tmp += 1
 
         assert masm == expected, f"bad masm for {dbg_name}\n{masm}"
