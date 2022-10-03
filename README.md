@@ -118,6 +118,8 @@ for i in range(2, 64):
 print(Mem.cell1[63])
 ```
 
+> **Note**: if you are using function calls, *pyndustric* will use `cell1` as a call stack, so you might not want to use `cell1` in that case to store data in it. (If you aren't calling any functions in your code, using `cell1` should be fine.)
+
 Custom function definitions:
 
 ```python
