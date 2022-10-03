@@ -149,6 +149,11 @@ supported "system calls" are documented in the [`pyndustri.pyi`] file.
 To learn about the possible compiler errors, refer to the `ERR_` and `ERROR_DESCRIPTIONS`
 constants in the [`constants.py`] file.
 
+To install pyndustric as module run:
+```sh
+$ git clone https://github.com/Lonami/pyndustric.git
+$ pip install -e pyndustric
+```
 To compile your program, run the [`pyndustric`] module and pass the files to compile as input
 arguments. The compiled program will be printed to standard output. `-` can be used as a file
 to refer to standard input:
