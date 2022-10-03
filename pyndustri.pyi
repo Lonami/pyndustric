@@ -370,7 +370,8 @@ class Unit(Senseable):
     @staticmethod
     def target_prediction(self, unit, shoot: bool = True):  # targetp
         """
-        Command the unit to target unit with velocity prediction. Set shoot to True to make unit shoot as well.
+        Command the unit to target another unit with velocity prediction.
+        If shoot is set to `True`, the bound unit will shoot as well.
         """
     @staticmethod
     def ceasefire(self):  # target
