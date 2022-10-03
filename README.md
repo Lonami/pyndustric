@@ -188,4 +188,5 @@ compiler's output!
 [ip-not-reset]: https://github.com/Anuken/Mindustry/issues/4189
 [limit-k]: https://github.com/Anuken/Mindustry/blob/ab19e6ffbd7a64117cd70d3e3b88806c13822c94/core/src/mindustry/logic/LExecutor.java#L28
 [`pyndustri.pyi`]: pyndustri.pyi
-[`pyndustric.py`]: pyndustric.py
+[`constants.py`]: pyndustric/constants.py
+[`pyndustric`]: pyndustric
