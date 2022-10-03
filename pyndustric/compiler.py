@@ -712,7 +712,7 @@ class Compiler(ast.NodeVisitor):
             else:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
-        elif method == "target_prediction":
+        elif method == "target_unit":
             if len(node.args) == 1:
                 unit = map(self.as_value, node.args)
                 self.ins_append(f"ucontrol targetp {unit} 1 0 0 0")

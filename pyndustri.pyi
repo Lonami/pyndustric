@@ -368,7 +368,7 @@ class Unit(Senseable):
         If shoot is set to `True`, it will behave same as `shoot(x, y)`.
         """
     @staticmethod
-    def target_prediction(self, unit, shoot: bool = True):  # targetp
+    def target_unit(self, unit, shoot: bool = True):  # targetp
         """
         Command the unit to target another unit with velocity prediction.
         If shoot is set to `True`, the bound unit will shoot as well.
