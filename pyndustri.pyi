@@ -364,7 +364,8 @@ class Unit(Senseable):
     @staticmethod
     def target(self, x: int = None, y: int = None, shoot: bool = False):  # target
         """
-        Command the unit to target (rotate to) the specified coordinates. If shoot is set to True, it will behave same as shoot(x,y)
+        Command the unit to target (rotate to) the specified coordinates.
+        If shoot is set to `True`, it will behave same as `shoot(x, y)`.
         """
     @staticmethod
     def target_prediction(self, unit, shoot: bool = True):  # targetp
