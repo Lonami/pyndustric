@@ -747,8 +747,20 @@ class Compiler(ast.NodeVisitor):
             x, y = map(self.as_value, node.args)
             self.ins_append(f"ucontrol mine {x} {y} 0 0 0")
 
+        elif method == "build":
+            if len(node.args) == 3:
+                x, y, block = map(self.as_value, node.args)
+                self.ins_append(f"ucontrol build {x} {y} {block} 0 0")
+            elif len(node.args) == 4:
+                x, y, block, rotation = map(self.as_value, node.args)
+                self.ins_append(f"ucontrol build {x} {y} {block} {rotation} 0")
+            elif len(node.args) == 5:
+                x, y, block, rotation, config = map(self.as_value, node.args)
+                self.ins_append(f"ucontrol build {x} {y} {block} {rotation} {config}")
+            else:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
         else:
-            # build and getBlock have virtually no documentation, so not implemented yet as I can't figure them out.
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
     def emit_control_syscall(self, node: ast.Call):
@@ -818,6 +830,16 @@ class Compiler(ast.NodeVisitor):
                 self.ins_append(f"ulocate damaged core {enemy} @copper {output}")
             else:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+        elif node.func.value.id == "Unit" and node.func.attr == "get_block":
+            if len(node.args) != 2:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            if len(outputs) != 2:
+                raise CompilerError(ERR_BAD_TUPLE_ASSIGN, node)
+            output = " ".join(outputs)
+            x, y = map(self.as_value, node.args)
+            self.ins_append(f"ucontrol getBlock {x} {y} {output} 0")
+
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
