@@ -150,10 +150,12 @@ To learn about the possible compiler errors, refer to the `ERR_` and `ERROR_DESC
 constants in the [`constants.py`] file.
 
 To install pyndustric as module run:
+
 ```sh
 $ git clone https://github.com/Lonami/pyndustric.git
 $ pip install -e pyndustric
 ```
+
 Alternativly, you can run it as module without installation by placing your program file at the root of the project directory.
 
 
