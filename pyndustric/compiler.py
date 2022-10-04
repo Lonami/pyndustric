@@ -702,6 +702,26 @@ class Compiler(ast.NodeVisitor):
             else:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
+        elif method == "target":
+            if len(node.args) == 2:
+                x, y = map(self.as_value, node.args)
+                self.ins_append(f"ucontrol target {x} {y} 0 0 0")
+            elif len(node.args) == 3:
+                x, y, shoot = map(self.as_value, node.args)
+                self.ins_append(f"ucontrol target {x} {y} {shoot} 0 0")
+            else:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+        elif method == "target_unit":
+            if len(node.args) == 1:
+                (unit,) = map(self.as_value, node.args)
+                self.ins_append(f"ucontrol targetp {unit} 1 0 0 0")
+            elif len(node.args) == 2:
+                unit, shoot = map(self.as_value, node.args)
+                self.ins_append(f"ucontrol targetp {unit} {shoot} 0 0 0")
+            else:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
         elif method == "ceasefire":
             if len(node.args) != 0:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)

@@ -362,6 +362,18 @@ class Unit(Senseable):
         Note that horizon must be in movement for it to shoot.
         """
     @staticmethod
+    def target(self, x: int = None, y: int = None, shoot: bool = False):  # target
+        """
+        Command the unit to target (rotate to) the specified coordinates.
+        If shoot is set to `True`, it will behave same as `shoot(x, y)`.
+        """
+    @staticmethod
+    def target_unit(self, unit, shoot: bool = True):  # targetp
+        """
+        Command the unit to target another unit with velocity prediction.
+        If shoot is set to `True`, the bound unit will shoot as well.
+        """
+    @staticmethod
     def ceasefire(self):  # target
         """
         Command the unit to stop firing immediately.

@@ -901,6 +901,10 @@ def test_unit_actions():
     ucontrol payTake takeUnits 0 0 0 0
     ucontrol payDrop 0 0 0 0 0
     ucontrol mine 13 14 0 0 0
+    ucontrol target 15 16 0 0 0
+    ucontrol target 17 18 true 0 0
+    ucontrol targetp @unit 1 0 0 0
+    ucontrol targetp @unit false 0 0 0
     """
     Unit.idle()
     Unit.stop()
@@ -921,6 +925,10 @@ def test_unit_actions():
     Unit.carry()
     Unit.drop()
     Unit.mine(13, 14)
+    Unit.target(15, 16)
+    Unit.target(17, 18, True)
+    Unit.target_unit(Env.unit)
+    Unit.target_unit(Env.unit, False)
 
 
 @masm_test
