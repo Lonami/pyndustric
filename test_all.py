@@ -909,6 +909,7 @@ def test_unit_actions():
     ucontrol build 21 22 @conveyor 3 0
     ucontrol build 23 24 @sorter 0 @titanium
     ucontrol getBlock 25 26 bt building1 0
+    ucontrol getBlock 27 28 0 building2 0
     """
     Unit.idle()
     Unit.stop()
@@ -937,6 +938,7 @@ def test_unit_actions():
     Unit.build(21, 22, Env.conveyor, 3)
     Unit.build(23, 24, Env.sorter, 0, Env.titanium)
     building1, bt = Unit.get_block(25, 26)
+    (building2,) = Unit.get_block(27, 28)
 
 
 @masm_test

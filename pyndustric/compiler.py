@@ -858,7 +858,7 @@ class Compiler(ast.NodeVisitor):
                 raise CompilerError(ERR_BAD_TUPLE_ASSIGN, node)
             x, y = map(self.as_value, node.args)
             if len(outputs) == 1:
-                output = "0 " + output[0]
+                output = "0 " + outputs[0]
             else:
                 output = " ".join(outputs[::-1])
             self.ins_append(f"ucontrol getBlock {x} {y} {output} 0")
