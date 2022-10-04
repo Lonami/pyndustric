@@ -432,11 +432,11 @@ class Unit(Senseable):
     @staticmethod
     def get_block(self, x, y):  # getBlock
         """
-        Get the building at x,y and put it in `building`, and its type in `building_type`.
-        The return value accomodates to the left-hand side as follows:
+        Return both the building type and building itself located at `(x, y)`:
+
         building_type, building = get_block(x, y)
 
-        Type can be used as block_type in build().
+        The building type can then be used as the `block_type` in `build()`.
         """
 
 Unit = Unit()
