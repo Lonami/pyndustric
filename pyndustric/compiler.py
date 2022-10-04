@@ -714,7 +714,7 @@ class Compiler(ast.NodeVisitor):
 
         elif method == "target_unit":
             if len(node.args) == 1:
-                unit = map(self.as_value, node.args)
+                (unit,) = map(self.as_value, node.args)
                 self.ins_append(f"ucontrol targetp {unit} 1 0 0 0")
             elif len(node.args) == 2:
                 unit, shoot = map(self.as_value, node.args)
