@@ -436,7 +436,7 @@ class Unit(Senseable):
 
         building_type, building = get_block(x, y)
 
-        The building type can then be used as the `block_type` in `build()`.
+        The building type can then be used as the `block_type` in `build()` and building may be used as the `config`.
         """
 
 Unit = Unit()
