@@ -424,10 +424,12 @@ class Unit(Senseable):
     @staticmethod
     def build(self, x: int, y: int, block_type, rotation=0, config=0):  # build
         """
-        Build block at position x,y with rotation (0-360 degrees).
-        Block represents the type of the block: (Env.router, Env.sorter, etc.).
+        Build a block at position `(x, y)` with rotation (0, 1, 2 or 3, the values indicating the number of 90º counter-clockwise steps).
+        For example, conveyors start facing east with a rotation of 0, north with 1, west with 2, and south with 3.
+
+        Block represents the type of the block (e.g. Env.router, Env.sorter...).
         Config is configuration for block (e.g. Env.titanium for Env.sorter).
-        You can pass onother block variable as config to copy the configuration of that block.
+        You can pass another block variable as config to copy the configuration of that block.
         """
     @staticmethod
     def get_block(self, x, y):  # getBlock
