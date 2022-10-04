@@ -834,10 +834,13 @@ class Compiler(ast.NodeVisitor):
         elif node.func.value.id == "Unit" and node.func.attr == "get_block":
             if len(node.args) != 2:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
-            if len(outputs) != 2:
+            if len(outputs) not in (1, 2):
                 raise CompilerError(ERR_BAD_TUPLE_ASSIGN, node)
-            output = " ".join(outputs)
             x, y = map(self.as_value, node.args)
+            if len(outputs) == 1:
+                output = "0 " + output[0]
+            else:
+                output = " ".join(outputs[::-1])
             self.ins_append(f"ucontrol getBlock {x} {y} {output} 0")
 
         else:
