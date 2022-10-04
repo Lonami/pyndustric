@@ -66,14 +66,29 @@ Screen.poly(20, 50, 20, 100)
 Screen.flush()
 ```
 
-Built-in properties to access the environment, like time or links:
+Built-in properties to access the environment, like counter or time:
 
 ```python
+counter = Env.counter
 current_time = Env.time
-link_count = Env.link_count
 ```
 
-Built-in functions to access sensors, like the amount of copper or current health:
+compiles to:
+
+```
+set counter @counter
+set current_time @time
+```
+
+Beyond defined ones in [`pyndustri.pyi`], this is also the way to write mindustry built-in variables and constants (ones that start with @). If written as string literals, compiled result will be a string, not a variable. E.g:
+
+```python
+titanium = "@titanium" # set titanium "@titanium"
+titanium = @titanium # compile error
+titanium = Env.titanium # set titanium @titanium
+```
+
+Built-in properties to access sensors, like the amount of copper or current health:
 
 ```python
 copper = container1.copper
@@ -161,12 +176,17 @@ $ pip install -e pyndustric
 Alternativly, you can run it as module without installation by placing your program file at the root of the project directory.
 
 
-To compile your program, run the [`pyndustric`] module and pass the files to compile as input
-arguments. The compiled program will be printed to standard output. `-` can be used as a file
-to refer to standard input:
+To compile your program, run the [`pyndustric`] module and pass the files to compile as input arguments.
+`-` can be used as a file to refer to standard input:
 
 ```sh
 $ python -m pyndustric yourprogram.py
+```
+
+The compiled program will be printed to standard output which can be either copeid or redirected to a file:
+
+```
+$ python -m pyndustric yourprogram.py > yourprogram.mlog
 ```
 
 ## Known limitations
