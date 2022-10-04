@@ -425,13 +425,33 @@ class Unit(Senseable):
 
         found, x = Unit.locate('enemy', building='core')  # the x coordinate of the enemy core if found
         found, x, y = Unit.locate('enemy', building='core')  # the x and y coordinate of the enemy core if found
-        found, x, y, building = Unit.locate('enemy', building='core')  # the x and y coordinate of the enemy core if found, and specific building type
+        found, x, y, building = Unit.locate('enemy', building='core')  # the x and y coordinate of the enemy core if found, and specific building
 
         Exactly one keyword argument is allowed.
 
         Building can be any literal of: core, storage, generator, turret, factory, repair, rally (command center), battery, resupply, reactor.
         Ore can be one of those in `Env` or in a variable.
         Both spawn and damaged can only be set to `True`.
+        """
+    @staticmethod
+    def build(self, x: int, y: int, block_type, rotation=0, config=0):  # build
+        """
+        Build a block at position `(x, y)` with rotation (0, 1, 2 or 3, the values indicating the number of 90º counter-clockwise steps).
+        For example, conveyors start facing east with a rotation of 0, north with 1, west with 2, and south with 3.
+
+        Block represents the type of the block (e.g. Env.router, Env.sorter...).
+        Config is configuration for block (e.g. Env.titanium for Env.sorter).
+        You can pass another block variable as config to copy the configuration of that block.
+        """
+    @staticmethod
+    def get_block(self, x, y):  # getBlock
+        """
+        Return the building and optionally its type located at `(x, y)`:
+
+        building, = get_block(x, y)
+        building, building_type = get_block(x, y)
+
+        The building type can then be used as the `block_type` in `build()` and building may be used as the `config`.
         """
 
 Unit = Unit()

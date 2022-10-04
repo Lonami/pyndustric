@@ -905,6 +905,11 @@ def test_unit_actions():
     ucontrol target 17 18 true 0 0
     ucontrol targetp @unit 1 0 0 0
     ucontrol targetp @unit false 0 0 0
+    ucontrol build 19 20 @router 0 0
+    ucontrol build 21 22 @conveyor 3 0
+    ucontrol build 23 24 @sorter 0 @titanium
+    ucontrol getBlock 25 26 bt building1 0
+    ucontrol getBlock 27 28 0 building2 0
     """
     Unit.idle()
     Unit.stop()
@@ -929,6 +934,11 @@ def test_unit_actions():
     Unit.target(17, 18, True)
     Unit.target_unit(Env.unit)
     Unit.target_unit(Env.unit, False)
+    Unit.build(19, 20, Env.router)
+    Unit.build(21, 22, Env.conveyor, 3)
+    Unit.build(23, 24, Env.sorter, 0, Env.titanium)
+    building1, bt = Unit.get_block(25, 26)
+    (building2,) = Unit.get_block(27, 28)
 
 
 @masm_test
