@@ -44,7 +44,6 @@ class Env:
     def ips():
         # https://github.com/Anuken/Mindustry/blob/b7f030eb1342fc4fd7c46274bfa9ed7af25f5829/core/src/mindustry/world/blocks/logic/LogicBlock.java#L128
         """Return the amount of instructions per second this processor is capable of executing."""
-
     def __getattr__(self):
         """
         Return an arbitrary `@variable`.
