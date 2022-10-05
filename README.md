@@ -80,12 +80,13 @@ set counter @counter
 set current_time @time
 ```
 
-Beyond defined ones in [`pyndustri.pyi`], this is also the way to write mindustry built-in variables and constants (ones that start with @). If written as string literals, compiled result will be a string, not a variable. E.g:
+Beyond the ones defined in [`pyndustri.pyi`], this is also the way to write Mindustry built-in variables and constants
+(those that start with @). If written as string literals, compiled result will be a string, not a variable. For example:
 
 ```python
-titanium = "@titanium" # set titanium "@titanium"
-titanium = @titanium # compile error
-titanium = Env.titanium # set titanium @titanium
+titanium = "@titanium"  # set titanium "@titanium"
+titanium = @titanium  # compile error
+titanium = Env.titanium  # set titanium @titanium
 ```
 
 Built-in properties to access sensors, like the amount of copper or current health:
@@ -183,10 +184,18 @@ To compile your program, run the [`pyndustric`] module and pass the files to com
 $ python -m pyndustric yourprogram.py
 ```
 
-The compiled program will be printed to standard output which can be either copeid or redirected to a file:
+The compiled program will be printed to standard output by default.
+You can also redirect the output to a file to create a new file with the compiled program:
 
-```
+```sh
 $ python -m pyndustric yourprogram.py > yourprogram.mlog
+```
+
+If the optional dependency `autoit` is installed, `-c` or `--clipboard` can be used to
+automatically copy the code to the clipboard which allows for very fast edit cycles:
+
+```sh
+$ python -m pyndustric -c yourprogram.py
 ```
 
 ## Known limitations
