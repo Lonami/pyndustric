@@ -45,6 +45,14 @@ class Env:
         # https://github.com/Anuken/Mindustry/blob/b7f030eb1342fc4fd7c46274bfa9ed7af25f5829/core/src/mindustry/world/blocks/logic/LogicBlock.java#L128
         """Return the amount of instructions per second this processor is capable of executing."""
 
+    def __getattr__(self):
+        """
+        Return an arbitrary `@variable`.
+
+        For example, `Env.titanium` can be used to refer to Mindustry's `@titanium`.
+        Underscores become dashes (e.g. `Env.titanium_conveyor` becomes `@titanium-conveyor`).
+        """
+
 Env = Env()
 
 # https://github.com/Anuken/Mindustry/blob/e714d44/core/assets/bundles/bundle.properties#L979-L998
