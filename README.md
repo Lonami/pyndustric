@@ -2,10 +2,11 @@
 
 A compiler from Python to Mindustry's assembly (logic programming language).
 
-The language **is** Python, so all simple programs you can imagine are possible. Check the [supported features][features]. There also might be some missing, so consider [contributing].
+The language **is** Python, so all simple programs you can imagine are possible.
+Check the [supported features][features] to learn what is currently possible.
+If you find something is missing, you're welcome to [contribute]!
 
-Beyond that, the
-supported "system calls" are documented in the [`pyndustri.pyi`] file.
+Beyond that, the supported "system calls" are documented in the [`pyndustri.pyi`] file.
 
 To learn about the possible compiler errors, refer to the `ERR_` and `ERROR_DESCRIPTIONS`
 constants in the [`constants.py`] file.
@@ -19,7 +20,7 @@ $ git clone https://github.com/Lonami/pyndustric.git
 $ pip install -e pyndustric
 ```
 
-Alternativly, you can run it as module without installation by placing your program file at the root of the project directory.
+Alternatively, you can run it as module without installation by placing your program file at the root of the project directory.
 
 
 To compile your program, run the [`pyndustric`] module and pass the files to compile as input arguments.
@@ -222,5 +223,5 @@ $ pytest
 [`constants.py`]: pyndustric/constants.py
 [`pyndustric`]: pyndustric
 [features]: #Supported-features
-[contributing]: #Contributing
+[contribute]: #Contributing
 [`CONTRIBUTING.md`]: CONTRIBUTING.md
