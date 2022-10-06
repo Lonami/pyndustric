@@ -14,6 +14,12 @@ branch zipped from https://github.com/Lonami/pyndustric/archive/master.zip.
 If you plan on contributing to the main repository or just want to hack on the code by yourself,
 it's recommended that you fork the project and clone that repository to work on it instead.
 
+When you install the module with pip (if you go that route opposed to running from within project folder), it is recommended to pass `-e` flag to pip:
+```sh
+$ git clone https://github.com/<path_to_your_fork>
+$ pip install -e pyndustric
+```
+
 ## Understanding the code
 
 The compiler itself lives in the `pyndustric/` directory. It makes use of the constants defined
