@@ -2,11 +2,45 @@
 
 A compiler from Python to Mindustry's assembly (logic programming language).
 
-To run the tests, simply use the following command:
+The language **is** Python, so all simple programs you can imagine are possible. Check the [supported features][features]. There also might be some missing, so consider [contributing].
+
+Beyond that, the
+supported "system calls" are documented in the [`pyndustri.pyi`] file.
+
+To learn about the possible compiler errors, refer to the `ERR_` and `ERROR_DESCRIPTIONS`
+constants in the [`constants.py`] file.
+
+## Getting up and running
+
+To install pyndustric as module run:
 
 ```sh
-$ pip install -r dev-requirements.txt
-$ pytest
+$ git clone https://github.com/Lonami/pyndustric.git
+$ pip install -e pyndustric
+```
+
+Alternativly, you can run it as module without installation by placing your program file at the root of the project directory.
+
+
+To compile your program, run the [`pyndustric`] module and pass the files to compile as input arguments.
+`-` can be used as a file to refer to standard input:
+
+```sh
+$ python -m pyndustric yourprogram.py
+```
+
+The compiled program will be printed to standard output by default.
+You can also redirect the output to a file to create a new file with the compiled program:
+
+```sh
+$ python -m pyndustric yourprogram.py > yourprogram.mlog
+```
+
+If the optional dependency `autoit` is installed, `-c` or `--clipboard` can be used to
+automatically copy the code to the clipboard which allows for very fast edit cycles:
+
+```sh
+$ python -m pyndustric -c yourprogram.py
 ```
 
 ## Supported features
@@ -159,50 +193,9 @@ else:
 > code. To fix this import empty code (which clears the instruction pointer) and then import the
 > real code, or upgrade your Mindustry version. [Original bug report][ip-not-reset].
 
-## Documentation
-
-The language is Python, so all simple programs you can imagine are possible. Beyond that, the
-supported "system calls" are documented in the [`pyndustri.pyi`] file.
-
-To learn about the possible compiler errors, refer to the `ERR_` and `ERROR_DESCRIPTIONS`
-constants in the [`constants.py`] file.
-
-To install pyndustric as module run:
-
-```sh
-$ git clone https://github.com/Lonami/pyndustric.git
-$ pip install -e pyndustric
-```
-
-Alternativly, you can run it as module without installation by placing your program file at the root of the project directory.
-
-
-To compile your program, run the [`pyndustric`] module and pass the files to compile as input arguments.
-`-` can be used as a file to refer to standard input:
-
-```sh
-$ python -m pyndustric yourprogram.py
-```
-
-The compiled program will be printed to standard output by default.
-You can also redirect the output to a file to create a new file with the compiled program:
-
-```sh
-$ python -m pyndustric yourprogram.py > yourprogram.mlog
-```
-
-If the optional dependency `autoit` is installed, `-c` or `--clipboard` can be used to
-automatically copy the code to the clipboard which allows for very fast edit cycles:
-
-```sh
-$ python -m pyndustric -c yourprogram.py
-```
-
 ## Known limitations
 
 Beware of very long programs, [there is a current limitation of 1000 instructions][limit-k].
-
-Currently only one memory cell is supported, which is used for the call stack.
 
 This program has hardly had any testing, so if you believe your program is misbehaving, there's
 a possibility that the compiler has a bug.
@@ -213,9 +206,21 @@ Contributors are more than welcome! Maybe you can improve the documentation, add
 missed, implement support for more Python features, or write a peephole optimizer for the
 compiler's output!
 
+More info on contributing can be found in [`CONTRIBUTING.md`]
+
+To run the tests, simply use the following command:
+
+```sh
+$ pip install -r dev-requirements.txt
+$ pytest
+```
+
 [f-string]: https://docs.python.org/3/reference/lexical_analysis.html#f-strings
 [ip-not-reset]: https://github.com/Anuken/Mindustry/issues/4189
 [limit-k]: https://github.com/Anuken/Mindustry/blob/ab19e6ffbd7a64117cd70d3e3b88806c13822c94/core/src/mindustry/logic/LExecutor.java#L28
 [`pyndustri.pyi`]: pyndustri.pyi
 [`constants.py`]: pyndustric/constants.py
 [`pyndustric`]: pyndustric
+[features]: #Supported-features
+[contributing]: #Contributing
+[`CONTRIBUTING.md`]: CONTRIBUTING.md
