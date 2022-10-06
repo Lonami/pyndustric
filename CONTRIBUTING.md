@@ -15,6 +15,7 @@ If you plan on contributing to the main repository or just want to hack on the c
 it's recommended that you fork the project and clone that repository to work on it instead.
 
 When you install the module with pip (if you go that route opposed to running from within project folder), it is recommended to pass `-e` flag to pip:
+
 ```sh
 $ git clone https://github.com/<path_to_your_fork>
 $ pip install -e pyndustric
