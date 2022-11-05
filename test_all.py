@@ -893,10 +893,10 @@ def test_unit_actions():
     ucontrol targetp @unit 1 0 0 0
     ucontrol target 9 10 1 0 0
     ucontrol target 0 0 0 0 0
-    ucontrol itemTake "container1" "copper" 1 0 0
-    ucontrol itemTake "container1" "copper" 11 0 0
-    ucontrol itemDrop "container1" 1 0 0 0
-    ucontrol itemDrop "container1" 12 0 0 0
+    ucontrol itemTake container1 @copper 1 0 0
+    ucontrol itemTake container1 @copper 11 0 0
+    ucontrol itemDrop container1 1 0 0 0
+    ucontrol itemDrop container1 12 0 0 0
     ucontrol payTake takeUnits 0 0 0 0
     ucontrol payTake takeUnits 0 0 0 0
     ucontrol payDrop 0 0 0 0 0
@@ -922,10 +922,10 @@ def test_unit_actions():
     Unit.shoot()
     Unit.shoot(9, 10)
     Unit.ceasefire()
-    Unit.fetch("container1", "copper")
-    Unit.fetch("container1", "copper", 11)
-    Unit.store("container1")
-    Unit.store("container1", 12)
+    Unit.fetch(container1, Env.copper)
+    Unit.fetch(container1, Env.copper, 11)
+    Unit.store(container1)
+    Unit.store(container1, 12)
     Unit.lift()
     Unit.carry()
     Unit.drop()
