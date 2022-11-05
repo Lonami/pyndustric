@@ -732,15 +732,20 @@ class Compiler(ast.NodeVisitor):
             if len(node.args) not in (2, 3):
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
-            # WIP
-            self.ins_append("ucontrol itemTake from item amount 0 0")
+            source = self.as_value(node.args[0])
+            item = self.as_value(node.args[1])
+            amount = self.as_value(node.args[2]) if len(node.args) == 3 else 1
+
+            self.ins_append(f"ucontrol itemTake {source} {item} {amount} 0 0")
 
         elif method == "store":
             if len(node.args) not in (1, 2):
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
-            # WIP
-            self.ins_append("ucontrol itemDrop to amount 0 0 0")
+            sink = self.as_value(node.args[0])
+            amount = self.as_value(node.args[1]) if len(node.args) == 2 else 1
+
+            self.ins_append(f"ucontrol itemDrop {sink} {amount} 0 0 0")
 
         elif method == "lift":
             if len(node.args) != 0:
