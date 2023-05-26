@@ -539,15 +539,7 @@ class Compiler(ast.NodeVisitor):
         arg = node.args[0]
         ms = self.as_value(arg)
 
-        sleep_label = _Label()
-
-        self.ins_append(f"op mul __sleep @ipt {ms}")
-        self.ins_append(sleep_label)
-        # 2 instructions (jump and sub), scaled to milliseconds (* 1000), divided by the ticks per second (/ 60)
-        # We could scale __sleep by 60 to avoid this ugly inexact number, but that would add another instruction of overhead.
-        # This is as small as we can get while being reasonably accurate.
-        self.ins_append("op sub __sleep __sleep 33.33333333333333")
-        self.ins_append(_Jump(sleep_label, "greaterThan __sleep 0"))
+        self.ins_append(f"wait {ms}")
 
     def emit_screen_syscall(self, node: ast.Call):
         method = node.func.attr
