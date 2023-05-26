@@ -459,7 +459,7 @@ class Compiler(ast.NodeVisitor):
         self._functions[node.name] = Function(start=prologue, argc=len(args.args))
 
         self.ins_append(f"read {reg_ret} cell1 {REG_STACK}")
-        for arg in args.args:
+        for arg in reversed(args.args):
             self.ins_append(f"op sub {REG_STACK} {REG_STACK} 1")
             self.ins_append(f"read {arg.arg} cell1 {REG_STACK}")
 

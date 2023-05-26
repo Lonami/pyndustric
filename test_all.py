@@ -641,6 +641,33 @@ def test_multi_call():
 
 
 @masm_test
+def test_multiarg_call():
+    """
+    jump 10 always
+    read __pyc_rc_0 cell1 __pyc_sp
+    op sub __pyc_sp __pyc_sp 1
+    read y cell1 __pyc_sp
+    op sub __pyc_sp __pyc_sp 1
+    read x cell1 __pyc_sp
+    set __pyc_ret y
+    jump 9 always
+    op add @counter __pyc_rc_0 1
+    write 4 cell1 __pyc_sp
+    op add __pyc_sp __pyc_sp 1
+    write 2 cell1 __pyc_sp
+    op add __pyc_sp __pyc_sp 1
+    write @counter cell1 __pyc_sp
+    jump 2 always
+    set %tmp0 __pyc_ret
+    """
+
+    def dot(x, y):
+        return y
+
+    dot(4, 2)
+
+
+@masm_test
 def test_complex_call():
     """
     jump 8 always
