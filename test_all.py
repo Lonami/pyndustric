@@ -86,7 +86,7 @@ def test_err_unsupported_op():
 
 
 def test_err_unsupported_iter():
-    expect_err(pyndustric.ERR_UNSUPPORTED_ITER, "for x in [1, 2]: pass")
+    expect_err(pyndustric.ERR_UNSUPPORTED_ITER, "for x in obj: pass")
 
 
 def test_err_bad_iter_args():

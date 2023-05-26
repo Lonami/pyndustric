@@ -62,11 +62,21 @@ class Function:
 
 
 class CompilerError(ValueError):
-    def __init__(self, code, node: ast.AST):
+    def __init__(self, code, node: ast.AST, **context):
         if node is None:
             node = ast.Module(lineno=0, col_offset=0)  # dummy value
 
-        super().__init__(f"[{code}/{node.lineno}:{node.col_offset}] {ERROR_DESCRIPTIONS[code]}")
+        if code in [
+            ERR_COMPLEX_ASSIGN,
+            ERR_COMPLEX_VALUE,
+            ERR_UNSUPPORTED_EXPR,
+            ERR_UNSUPPORTED_SYSCALL,
+            ERR_BAD_SYSCALL_ARGS,
+        ]:
+            context["unparsed"] = ast.unparse(node)
+        super().__init__(
+            f"[{code}/{node.lineno}:{node.col_offset}] {ERROR_DESCRIPTIONS[code].format(**context)}"
+        )
 
 
 class InternalCompilerError(CompilerError):
@@ -139,7 +149,8 @@ class Compiler(ast.NodeVisitor):
         self._scope_start_label = (
             []
         )  # needed for continue to know its previous label to jump to; works like a stack
-        self._scope_end_label = []  # needed for break to know its next label to jump to; works like a stack
+        # needed for break to know its next label to jump to; works like a stack
+        self._scope_end_label = []
 
     def ins_append(self, ins):
         if not isinstance(ins, _Instruction):
@@ -175,12 +186,12 @@ class Compiler(ast.NodeVisitor):
 
         return self.generate_masm()
 
-    def visit_Import(self, node):
-        raise CompilerError(ERR_UNSUPPORTED_IMPORT, node)
+    def visit_Import(self, node: ast.Import):
+        raise CompilerError(ERR_UNSUPPORTED_IMPORT, node, a=node.names[0].name)
 
-    def visit_ImportFrom(self, node):
-        if node.module != "pyndustri" or len(node.names) != 1 or node.names[0].name != "*":
-            raise CompilerError(ERR_UNSUPPORTED_IMPORT, node)
+    def visit_ImportFrom(self, node: ast.ImportFrom):
+        if node.module != "pyndustri":
+            raise CompilerError(ERR_UNSUPPORTED_IMPORT, node, a=node.module)
 
     def visit_Assign(self, node: ast.Assign):
         target = node.targets[0]
@@ -237,7 +248,7 @@ class Compiler(ast.NodeVisitor):
 
         op = BIN_OPS.get(type(node.op))
         if op is None:
-            raise CompilerError(ERR_UNSUPPORTED_OP, node)
+            raise CompilerError(ERR_UNSUPPORTED_OP, node, op=node.op.__class__.__name__)
 
         right = self.as_value(node.value)
         self.ins_append(f"op {op} {target.id} {target.id} {right}")
@@ -261,7 +272,7 @@ class Compiler(ast.NodeVisitor):
         if not jump_if_test:
             cmp = NEGATED_BIN_CMP.get(cmp)
         if cmp is None:
-            raise CompilerError(ERR_UNSUPPORTED_OP, test)
+            raise CompilerError(ERR_UNSUPPORTED_OP, test, op=cmp)
 
         if cmp == "and":
             failed_label = _Label()
@@ -282,7 +293,7 @@ class Compiler(ast.NodeVisitor):
         else:
             self.ins_append(_Jump(destination_label, f"{cmp} {left} {right}"))
 
-    def radar_instruction(self, variable, obj, value):
+    def radar_instruction(self, variable, obj, value) -> str:
         if obj == "Unit":
             radar = "uradar"
             obj = "@unit"
@@ -291,7 +302,15 @@ class Compiler(ast.NodeVisitor):
 
         criteria = [arg.id for arg in value.args]
         if len(criteria) > 3:
-            raise CompilerError(ERR_ARGC_MISMATCH, value)
+            raise CompilerError(
+                ERR_ARGC_MISMATCH,
+                value,
+                n1=len(criteria),
+                called="Unit.radar",
+                n2="<=3",
+                plural1="s",
+                plural2="s",
+            )
 
         while len(criteria) < 3:
             criteria.append("any")
@@ -346,7 +365,7 @@ class Compiler(ast.NodeVisitor):
 
         call = node.iter
         if not isinstance(call, ast.Call):
-            raise CompilerError(ERR_UNSUPPORTED_ITER, node)
+            raise CompilerError(ERR_UNSUPPORTED_ITER, node, a=self.as_value(call))
 
         inject = []
         backwards = False
@@ -371,9 +390,11 @@ class Compiler(ast.NodeVisitor):
                 start, end, step = map(self.as_value, argv)
                 backwards = isinstance(argv[2], ast.UnaryOp) and isinstance(argv[2].op, ast.USub)
             else:
-                raise CompilerError(ERR_BAD_ITER_ARGS, node)
+                raise CompilerError(
+                    ERR_BAD_ITER_ARGS, node, a=list(x[1:-1] for x in map(self.as_value, argv))
+                )
         else:
-            raise CompilerError(ERR_UNSUPPORTED_ITER, node)
+            raise CompilerError(ERR_UNSUPPORTED_ITER, node, a=call.func.id)
 
         self.ins_append(f"set {it} {start}")
 
@@ -405,10 +426,10 @@ class Compiler(ast.NodeVisitor):
         # TODO forbid recursion (or implement it by storing and restoring everything from stack)
         # TODO local variable namespace per-function
         if self._in_def is not None:
-            raise CompilerError(ERR_NESTED_DEF, node)
+            raise CompilerError(ERR_NESTED_DEF, node, a=node.name)
 
         if node.name in self._functions or node.name == "print":
-            raise CompilerError(ERR_REDEF, node)
+            raise CompilerError(ERR_REDEF, node, a=node.name)
 
         self._in_def = node.name
         reg_ret = f"{REG_RET_COUNTER_PREFIX}{len(self._functions)}"
@@ -423,11 +444,11 @@ class Compiler(ast.NodeVisitor):
                 args.defaults,
             )
         ):
-            raise CompilerError(ERR_INVALID_DEF, node)
+            raise CompilerError(ERR_INVALID_DEF, node, a=node.name)
 
         if sys.version_info >= (3, 8):
             if args.posonlyargs:
-                raise CompilerError(ERR_INVALID_DEF, node)
+                raise CompilerError(ERR_INVALID_DEF, node, a=node.name)
 
         # TODO it's better to put functions at the end and not have to skip them as code, but jumps need fixing
         end = _Label()
@@ -1052,7 +1073,6 @@ class Compiler(ast.NodeVisitor):
             else:
                 output = " ".join(outputs[::-1])
             self.ins_append(f"ucontrol getBlock {x} {y} {output} 0")
-
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
@@ -1169,7 +1189,7 @@ class Compiler(ast.NodeVisitor):
                 elif op == ast.USub:
                     value = -const
                 else:
-                    raise CompilerError(ERR_UNSUPPORTED_OP, node)
+                    raise CompilerError(ERR_UNSUPPORTED_OP, node, op=op.__class__.__name__)
 
                 return self.as_value(ast.Constant(value=value))
             else:
@@ -1184,7 +1204,7 @@ class Compiler(ast.NodeVisitor):
                 elif op == ast.USub:
                     self.ins_append(f"op sub {output} 0 {operand}")
                 else:
-                    raise CompilerError(ERR_UNSUPPORTED_OP, node)
+                    raise CompilerError(ERR_UNSUPPORTED_OP, node, op.__class__.__name__)
 
                 return output
 
@@ -1192,7 +1212,7 @@ class Compiler(ast.NodeVisitor):
             # 1 + 2
             op = BIN_OPS.get(type(node.op))
             if op is None:
-                raise CompilerError(ERR_UNSUPPORTED_OP, node)
+                raise CompilerError(ERR_UNSUPPORTED_OP, node, op=node.op.__class__.__name__)
 
             left = self.as_value(node.left)
             right = self.as_value(node.right)
@@ -1206,7 +1226,7 @@ class Compiler(ast.NodeVisitor):
 
             cmp = BIN_CMP.get(type(node.ops[0]))
             if cmp is None:
-                raise CompilerError(ERR_UNSUPPORTED_OP, node)
+                raise CompilerError(ERR_UNSUPPORTED_OP, node, node.ops[0].__class__.__name__)
 
             left = self.as_value(node.left)
             right = self.as_value(node.comparators[0])
@@ -1219,7 +1239,15 @@ class Compiler(ast.NodeVisitor):
             if function in BUILTIN_DEFS:
                 argc = BUILTIN_DEFS[function]
                 if len(node.args) != argc:
-                    raise CompilerError(ERR_ARGC_MISMATCH, node)
+                    # used {n1} argument{plural1} calling function "{called}"; "{called}" defined with {n2} argument{plural2}
+                    raise CompilerError(
+                        ERR_ARGC_MISMATCH,
+                        node,
+                        n1=len(node.args),
+                        called=node.func.id,
+                        n2=argc,
+                        plural1=plural(len(node.args), plural2=plural(argc)),
+                    )
 
                 operands = " ".join(self.as_value(arg) for arg in node.args)
                 self.ins_append(f"op {function} {output} {operands}")
@@ -1228,10 +1256,18 @@ class Compiler(ast.NodeVisitor):
             else:
                 fn = self._functions.get(node.func.id)
                 if fn is None:
-                    raise CompilerError(ERR_NO_DEF, node)
+                    raise CompilerError(ERR_NO_DEF, node, a=node.func.id)
 
                 if len(node.args) != fn.argc:
-                    raise CompilerError(ERR_ARGC_MISMATCH, node)
+                    raise CompilerError(
+                        ERR_ARGC_MISMATCH,
+                        node,
+                        n1=len(node.args),
+                        called=node.func.id,
+                        n2=fn.argc,
+                        plural1=plural(len(node.args)),
+                        plural2=plural(fn.argc),
+                    )
 
                 for arg in node.args:
                     val = self.as_value(arg)
@@ -1311,3 +1347,7 @@ class Compiler(ast.NodeVisitor):
 
         # Final output is all instructions ignoring labels
         return "\n".join(str(i) for i in self._ins if not isinstance(i, _Label)) + "\nend\n"
+
+
+def plural(n: int):
+    "s" if n != 1 else ""
