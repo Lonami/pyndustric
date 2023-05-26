@@ -19,7 +19,7 @@ class Env:
     def y():
         """Return the `y` coordinate where `this` is located."""
     @property
-    def counter():
+    def counter() -> int:
         """
         Return the Program Counter (also known as Instruction Pointer).
 
@@ -32,16 +32,16 @@ class Env:
     def link_count():
         """Return how many links there are connected to `this` logic processor."""
     @property
-    def time():
+    def time() -> float:
         """Return the current UNIX timestamp, in milliseconds."""
     @property
-    def width():
+    def width() -> int:
         """Return the width of the entire map, in tiles."""
     @property
-    def height():
+    def height() -> int:
         """Return the height of the entire map, in tiles."""
     @property
-    def ips():
+    def ips() -> float:
         # https://github.com/Anuken/Mindustry/blob/b7f030eb1342fc4fd7c46274bfa9ed7af25f5829/core/src/mindustry/world/blocks/logic/LogicBlock.java#L128
         """Return the amount of instructions per second this processor is capable of executing."""
     def __getattr__(self):
@@ -421,7 +421,7 @@ class Unit(Senseable):
         Store a user-provided number in the unit for later use (for example, to "flag" this unit already was used).
         """
     @staticmethod
-    def locate(team: str, *, building=None, ore=None, spawn=None, damaged=None):
+    def locate(team: str, *, building=None, ore=None, spawn=None, damaged=None) -> Tuple[int]:
         """
         Locate an `'ally'` or '`enemy`' structure near the bound unit.
 
