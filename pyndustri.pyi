@@ -52,10 +52,116 @@ class Env:
         Underscores become dashes (e.g. `Env.titanium_conveyor` becomes `@titanium-conveyor`).
         """
 
+class World:
+    """
+    World processor specific items
+    """
+
+    class blocks:
+        @staticmethod
+        def count(type: str, team: str) -> int:
+            """
+            Get the block count of type type (eg "Env.conveyor").
+            Type can also be "core"
+            """
+        @staticmethod
+        def index(type: str, team: str, index: int) -> Resource:
+            """
+            Get the block of type type (eg "Env.conveyor") at index index.
+            Type can also be "core"
+            """
+        @staticmethod
+        def set(ore: str, floor: str, block: str, block_team: str, block_rotation: int = 0):
+            """
+            Sets the block.
+            Usage: World.blocks[x][y].set(ore=Env.titanium_ore)
+            """
+        @staticmethod
+        def get_block() -> Senseable:
+            """Get block. Usage: block = World.blocks[x][y].get_block()"""
+        @staticmethod
+        def get_build() -> Senseable:  # tbh not sure what the difference between a block and a building is
+            """Get building. Usage: build = World.blocks[x][y].get_build()"""
+        @staticmethod
+        def get_ore() -> Resource:
+            """Get ore. Usage: ore = World.blocks[x][y].get_ore()"""
+        @staticmethod
+        def get_floor() -> Resource:
+            """Get floor. Usage: floor = World.blocks[x][y].get_floor()"""
+    @staticmethod
+    def fetch_player(team: str, index: int):
+        """Fetches the player at a certain index."""
+    @staticmethod
+    def fetch_unit(team: str, index: int):
+        """Fetches the unit at a certain index."""
+    @staticmethod
+    def unit_count(team: str) -> int:  # could change this to Teams.sharded.units() hmm
+        """Get the unit (all types) count of a team."""
+    @staticmethod
+    def player_count(team: str) -> int:
+        """Get the player count of a team."""
+    @staticmethod
+    def spawn_unit(type: str, x: int, y: int, team: str, rot: int):
+        """Spawns a unit at (x, y), then returns it."""
+    @staticmethod
+    def spawn_natural_wave():
+        """Spawns the next wave set by the map at a spawn point i think????"""
+    @staticmethod
+    def spawn_wave(x: int, y: int):
+        """Spawns the next wave set by the map at (x, y) (?)"""
+    @staticmethod
+    def apply_status(unit: Unit, status: str, length: float):
+        """Applys a status to a unit for a certain length"""
+    @staticmethod
+    def clear_status(unit: Unit, status: str):
+        """Clear status from unit"""
+    @staticmethod
+    def set_rate(ipt: int):
+        """Sets the instructions per tick for this processor (note, uses ticks instead of seconds (1 tick = 1/60))"""
+    @staticmethod
+    def camera_pan(x: int, y: int, speed: float):
+        """
+        Pan the player camera
+        """
+    @staticmethod
+    def camera_zoom(level: float):
+        """
+        Zoom the player camera
+        """
+    @staticmethod
+    def camera_stop():
+        """
+        Stops any camera efects
+        """
+    @staticmethod
+    def create_explosion(
+        team: str,
+        x: int,
+        y: int,
+        radius: float,
+        damage: float,
+        hits_air: bool = True,
+        hits_ground: bool = True,
+        piercing: bool = False,
+    ):
+        """
+        Cause a explosion. hits_air, hits_ground and piercing are kwargs.
+        """
+    @staticmethod
+    def set_flag(ident: str):
+        """Sets a flag that is globally acessible (via get_flag) from all world processors"""
+    @staticmethod
+    def unset_flag(ident: str):
+        """Unsets a flag previously set by set_flag"""
+    @staticmethod
+    def get_flag(ident: str) -> bool:
+        """Checks if a flag is set (set flag via set_flag)"""
+
 Env = Env()
 
 # https://github.com/Anuken/Mindustry/blob/e714d44/core/assets/bundles/bundle.properties#L979-L998
 # https://github.com/Anuken/Mindustry/blob/8bc349b/core/src/mindustry/logic/LAccess.java#L6-L47
+
 class Senseable(ABC):
     """
     Type hints for things that can be sensed.
@@ -470,11 +576,25 @@ class Mem:
     Note that `cell1` is used for function calls (but is unused otherwise).
     """
 
-def print(message: str, flush: Union[bool, str] = True):
+def print(message: str, flush: Union[bool, str] = True, time: float = 0.0):
     """
     Print a message. f-strings are supported and encouraged to do string formatting.
 
+    Note `flush` must be specified as a keyword arg.
     `flush` may be a boolean indicating whether to emit `printflush` or not, or the name of the message.
+
+    For world procesors,
+    Flush can be:
+    - `notify`:
+        Puts the print buffer on the top of the screen with a fancy panel.
+    - `announce`:
+        Puts the print buffer in the center of the screen for a certain amount of time.
+        Set time with `print(flush='announce', time=3.0)`.
+    - `toast`:
+        Puts the print buffer slightly lower than the top of the screen with no fancy panel
+        Set time as with announce.
+    - `mission`:
+        Changes the "mission" from Wave 1... waiting (etc) to the print buffer
     """
 
 def sleep(secs: float):

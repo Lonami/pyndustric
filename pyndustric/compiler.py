@@ -478,15 +478,69 @@ class Compiler(ast.NodeVisitor):
                 return self.emit_sleep_syscall(call)
             else:
                 return self.as_value(call)
-
-        if not isinstance(call.func, ast.Attribute) or not isinstance(call.func.value, ast.Name):
+        if not (
+            isinstance(call.func, ast.Attribute)
+            or isinstance(call.func.value, ast.Name)
+            or isinstance(call.func.value, ast.Attribute)
+        ):
             raise CompilerError(ERR_UNSUPPORTED_EXPR, node)
 
+        if isinstance(call.func.value, ast.Attribute):
+            ns = call.func.value.value.id + "." + call.func.value.attr
+            if ns == "World.blocks":
+                return self.emit_world_syscall_block_standalone(call)
+            else:
+                raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+        # x[]
+        if (
+            # x[]
+            isinstance(call.func.value, ast.Subscript)
+            # x[][]
+            and isinstance(call.func.value.value, ast.Subscript)
+            # x[][]. < note the dot
+            and isinstance(call.func.value.value.value, ast.Attribute)
+            # x[][].obj
+            and isinstance(call.func.value.value.value.value, ast.Name)
+        ):
+            ns = call.func.value.value.value.value.id + "." + call.func.value.value.value.attr
+            if ns == "World.blocks":
+                y = self.as_value(call.func.value.slice)
+                x = self.as_value(call.func.value.value.slice)
+                method = call.func.attr
+                if method == "set":
+                    block = block_team = block_rotation = False
+                    for kw in call.keywords:
+                        if not (kw.arg in ["ore", "floor", "block", "block_team", "block_rotation"]):
+                            raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+                        # i tried to use exec but it wouldnt work
+                        v = self.as_value(kw.value)
+                        # black cant handle match "ore" | "floor"
+                        if kw.arg in ["ore", "floor"]:
+                            self.ins_append(f"setblock {kw.arg} {v} {x} {y}")
+                        elif kw.arg == "block":
+                            block = v
+                        elif kw.arg == "block_team":
+                            block_team = v
+                        elif kw.arg == "block_rotation":
+                            block_rotation = v
+                    if block != False:
+                        if block_team == False:
+                            raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+                        if block_rotation == False:
+                            block_rotation = 0
+                            self.ins_append(f"setblock block {block} {x} {y} {block_team} {block_rotation}")
+                else:
+                    raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+                return
+
         ns = call.func.value.id
+
         if ns == "Screen":
             self.emit_screen_syscall(call)
         elif ns == "Unit":
             self.emit_unit_syscall(call)
+        elif ns == "World":
+            self.emit_world_syscall_standalone(call)
         # Try to emit certain special calls if the method name is recognised, no matter the object.
         elif self.emit_control_syscall(call):
             pass
@@ -516,18 +570,32 @@ class Compiler(ast.NodeVisitor):
             self.ins_append(f"print {val}")
 
         flush = True
+        time = True
         for kw in node.keywords:
             if kw.arg == "flush":
-                if isinstance(kw.value, ast.Constant) and kw.value.value in (False, True):
+                if isinstance(kw.value, ast.Constant):
                     flush = kw.value.value
                 elif isinstance(kw.value, ast.Name):
                     flush = kw.value.id
                 else:
                     raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            elif kw.arg == "time":
+                if isinstance(kw.value, ast.Constant):
+                    time = kw.value.value
+                elif isinstance(kw.value, ast.Name):
+                    time = kw.value.id
+                else:
+                    raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
             else:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
-
         if isinstance(flush, str):
+            if flush in ["notify", "announce"] and isinstance(time, bool):
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            if flush in ["toast", "mission", "notify", "announce"]:
+                self.ins_append(
+                    f"message {flush}" + (" " + str(time) if not isinstance(time, bool) else "")
+                )
+                return
             self.ins_append(f"printflush {flush}")
         elif flush:
             self.ins_append(f"printflush message1")
@@ -779,6 +847,131 @@ class Compiler(ast.NodeVisitor):
 
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+
+    def emit_world_syscall_var(self, node: ast.Call, var: str) -> bool:
+        method = node.func.attr
+        if method == "fetch_player":
+            if len(node.args) != 2:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            team, index = map(self.as_value, node.args)
+            self.ins_append(f"fetch player {var} {team} {index}")
+            return True
+        if method == "fetch_unit":
+            if len(node.args) != 2:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            team, index = map(self.as_value, node.args)
+            self.ins_append(f"fetch unit {var} {team} {index}")
+        elif method == "unit_count":
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            team = self.as_value(node.args[0])
+            self.ins_append(f"fetch unitCount {var} {team}")
+        elif method == "player_count":
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            team = self.as_value(node.args[0])
+            self.ins_append(f"fetch playerCount {var} {team}")
+        elif method == "spawn_unit":
+            if len(node.args) != 5:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            ty, x, y, team, rot = map(self.as_value, node.args)
+            self.ins_append(f"spawn {ty} {x} {y} {rot} {team} {var}")
+        elif method == "get_flag":
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            self.ins_append(f"getflag {var} {self.as_value(node.args[0])}")
+        else:
+            return False
+        return True
+
+    def emit_world_syscall_standalone(self, node: ast.Call):
+        method = node.func.attr
+        if method == "spawn_natural_wave":
+            self.ins_append("spawnwave 0 0 true")
+        elif method == "spawn_wave":
+            if len(node.args) != 2:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            x, y = map(self.as_value, node.args)
+            self.ins_append(f"spawnwave {x} {y} false")
+        elif method == "apply_status":
+            if len(node.args) != 3:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            unit, status, length = map(self.as_value, node.args)
+            self.ins_append(f"status false {status} {unit} {length}")
+        elif method == "clear_status":
+            if len(node.args) != 2:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            unit, status = map(self.as_value, node.args)
+            self.ins_append(f"status true {status} {unit} 0")
+        elif method == "set_rate":
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            self.ins_append(f"setrate {self.as_value(node.args[0])}")
+        elif method == "camera_pan":
+            if len(node.args) != 3:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            x, y, speed = map(self.as_value, node.args)
+            self.ins_append(f"cutscene pan {x} {y} {speed}")
+        elif method == "camera_zoom":
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            level = self.as_value(node.args[0])
+            self.ins_append(f"cutscene zoom {level}")
+        elif method == "camera_stop":
+            self.ins_append(f"cutscene stop")
+        elif method == "create_explosion":
+            if len(node.args) != 5:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            team, x, y, radius, damage = map(self.as_value, node.args)
+            hits_air = hits_ground = True
+            piercing = False
+            for kw in node.keywords:
+                if not (
+                    isinstance(kw.value, ast.Constant)
+                    and kw.value.value in (False, True)
+                    and kw.arg in ["hits_air", "hits_ground", "piercing"]
+                ):
+                    raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+                exec(f"{kw.arg} = {kw.value.value}")
+
+            self.ins_append(
+                f"explosion {team} {x} {y} {radius} {damage} {hits_air} {hits_ground} {piercing}"
+            )
+        elif method == "set_flag":
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            self.ins_append(f"setflag {self.as_value(node.args[0])} true")
+        elif method == "unset_flag":
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            self.ins_append(f"setflag {self.as_value(node.args[0])} false")
+        else:
+            raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+
+    def emit_world_syscall_block_standalone(self, node: ast.Call):
+        method = node.func.attr
+
+    def emit_world_syscall_block_var(self, node: ast.Call, var: str):
+        method = node.func.attr
+        if method == "count":
+            if len(node.args) != 2:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            ty, team = map(self.as_value, node.args)
+            if ty[1:-1] == "core":
+                self.ins_append(f"fetch coreCount {var} {team}")
+                return True
+            self.ins_append(f"fetch buildCount {var} {team} {ty}")
+        elif method == "index":
+            if len(node.args) != 3:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            ty, team, index = map(self.as_value, node.args)
+            if ty[1:-1] == "core":
+                self.ins_append(f"fetch core {var} {team} {index}")
+                return True
+            self.ins_append(f"fetch build {var} {team} {index} {ty}")
+        else:
+            return False
+        return True
 
     def emit_control_syscall(self, node: ast.Call):
         link = node.func.value.id
@@ -1050,6 +1243,31 @@ class Compiler(ast.NodeVisitor):
                 # Expressions may be very complex elsewhere, make sure `REG_RET` is not overwritten.
                 self.ins_append(f"set {output} {REG_RET}")
                 return output
+        elif isinstance(node, ast.Call) and isinstance(node.func.value, ast.Attribute):
+            ns = node.func.value.value.id + "." + node.func.value.attr
+            if ns == "World.blocks":
+                if self.emit_world_syscall_block_var(node, output):
+                    return output
+            else:
+                raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
+        elif (
+            # see visit_Expr for comments
+            isinstance(node, ast.Call)
+            and isinstance(node.func.value, ast.Subscript)
+            and isinstance(node.func.value.value, ast.Subscript)
+            and isinstance(node.func.value.value.value, ast.Attribute)
+            and isinstance(node.func.value.value.value.value, ast.Name)
+        ):
+            ns = node.func.value.value.value.value.id + "." + node.func.value.value.value.attr
+            if ns == "World.blocks":
+                y = self.as_value(node.func.value.slice)
+                x = self.as_value(node.func.value.value.slice)
+                method: str = node.func.attr
+                if method.startswith("get"):
+                    ty = method.removeprefix("get_")
+                    self.ins_append(f"getblock {ty} {output} {x} {y}")
+                    return output
+            raise CompilerError(ERR_UNSUPPORTED_EXPR, node)
 
         elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
             # building.radar(), Unit.radar()
@@ -1057,6 +1275,11 @@ class Compiler(ast.NodeVisitor):
             method = node.func.attr
             if method == "radar":
                 return self.radar_instruction(output, obj, node)
+
+            if obj == "World":
+                if self.emit_world_syscall_var(node, output):
+                    return output
+                raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
             # The next functions are only available on units.
             if obj != "Unit":
