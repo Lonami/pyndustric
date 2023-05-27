@@ -86,7 +86,7 @@ def test_err_unsupported_op():
 
 
 def test_err_unsupported_iter():
-    expect_err(pyndustric.ERR_UNSUPPORTED_ITER, "for x in [1, 2]: pass")
+    expect_err(pyndustric.ERR_UNSUPPORTED_ITER, "for x in obj: pass")
 
 
 def test_err_bad_iter_args():
@@ -641,6 +641,33 @@ def test_multi_call():
 
 
 @masm_test
+def test_multiarg_call():
+    """
+    jump 10 always
+    read __pyc_rc_0 cell1 __pyc_sp
+    op sub __pyc_sp __pyc_sp 1
+    read y cell1 __pyc_sp
+    op sub __pyc_sp __pyc_sp 1
+    read x cell1 __pyc_sp
+    set __pyc_ret y
+    jump 9 always
+    op add @counter __pyc_rc_0 1
+    write 4 cell1 __pyc_sp
+    op add __pyc_sp __pyc_sp 1
+    write 2 cell1 __pyc_sp
+    op add __pyc_sp __pyc_sp 1
+    write @counter cell1 __pyc_sp
+    jump 2 always
+    set %tmp0 __pyc_ret
+    """
+
+    def dot(x, y):
+        return y
+
+    dot(4, 2)
+
+
+@masm_test
 def test_complex_call():
     """
     jump 8 always
@@ -740,11 +767,9 @@ def test_print():
 @masm_test
 def test_sleep():
     """
-    op mul __sleep @ipt 500
-    op sub __sleep __sleep 33.33333333333333
-    jump 2 greaterThan __sleep 0
+    wait 0.5
     """
-    sleep(500)
+    sleep(0.5)
 
 
 @masm_test
@@ -812,6 +837,26 @@ def test_sensor_special_names():
     op div health %tmp0 %tmp1
     """
     health = duo1.health / duo1.max_health
+
+
+@masm_test
+def test_world_setblock():
+    """
+    setrate 6000
+    set x 0
+    jump 11 greaterThanEq x @mapw
+    set y 0
+    jump 9 greaterThanEq y @maph
+    setblock block @router x y @sharded 0
+    op add y y 1
+    jump 5 always
+    op add x x 1
+    jump 3 always
+    """
+    World.set_rate(6000)
+    for x in range(Env.width):
+        for y in range(Env.height):
+            World.blocks[x][y].set(block=Env.router, block_team=Env.sharded)
 
 
 @masm_test
@@ -993,3 +1038,46 @@ def test_memory():
         Mem.cell1[i] = Mem.cell1[i - 2] + Mem.cell1[i - 1]
 
     print(Mem.cell1[63])
+
+
+@masm_test
+def test_world_general():
+    """
+    setrate 4000
+    getblock block block 5 5
+    fetch player %tmp0 @sharded 0
+    status true @wet %tmp0 0
+    fetch unit %tmp1 @sharded 0
+    status false @wet %tmp1 50.0
+    fetch playerCount o @sharded
+    spawn @flare 5 0 45 @sharded u
+    spawnwave 0 0 true
+    spawnwave 5 0 false
+    cutscene pan 5 0 24.0
+    cutscene zoom 21.0
+    cutscene stop
+    explosion @sharded 5 0 4 50 True True False
+    setflag "global" true
+    setflag "global" false
+    getflag o "global"
+    print "abc"
+    message announce 4
+    """
+    World.set_rate(4000)
+    World.blocks.count(Env.conveyor, Env.sharded)
+    World.blocks.index(Env.conveyor, Env.sharded, 0)
+    block = World.blocks[5][5].get_block()
+    World.clear_status(World.fetch_player(Env.sharded, 0), Env.wet)
+    World.apply_status(World.fetch_unit(Env.sharded, 0), Env.wet, 50.0)
+    o = World.player_count(Env.sharded)
+    u = World.spawn_unit(Env.flare, 5, 0, Env.sharded, 45)
+    World.spawn_natural_wave()
+    World.spawn_wave(5, 0)
+    World.camera_pan(5, 0, 24.0)
+    World.camera_zoom(21.0)
+    World.camera_stop()
+    World.create_explosion(Env.sharded, 5, 0, 4, 50, hits_air=False)
+    World.set_flag("global")
+    World.unset_flag("global")
+    o = World.get_flag("global")
+    print("abc", flush="announce", time=4)

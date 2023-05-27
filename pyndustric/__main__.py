@@ -3,6 +3,7 @@ import argparse
 import pyndustric
 import sys
 import time
+import inspect
 
 
 def create_args():
@@ -35,7 +36,13 @@ def main():
 
         print(f"# compiling {file}...", file=sys.stderr)
         start = time.time()
-        masm = pyndustric.Compiler().compile(source)
+        try:
+            masm = pyndustric.Compiler().compile(source)
+        except pyndustric.CompilerError as e:
+            trace = inspect.trace()[-1]
+            print(f"[{trace.lineno}@{trace.function}]{str(e)}")
+
+            sys.exit(1)
         complete_masm += masm
         took = time.time() - start
         print(masm)
