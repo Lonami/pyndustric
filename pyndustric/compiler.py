@@ -717,6 +717,11 @@ class Compiler(ast.NodeVisitor):
             else:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
+        elif method == "col":
+            if len(node.args) == 1:
+                value = self.as_value(node.args[0])
+                self.ins_append(f"draw col {value}")
+
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 

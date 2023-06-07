@@ -1093,3 +1093,19 @@ def test_control_color():
     red = "%ff0000"
     green = "%00ff00ff"
     illuminator1.color(red)
+
+
+@masm_test
+def test_display_col():
+    """
+    set red %ff000099
+    draw clear 0 255 0
+    draw col red
+    draw rect 0 0 88 176
+    drawflush display1
+    """
+    red = "%ff000099"
+    Screen.clear(0, 255, 0)
+    Screen.col(red)
+    Screen.rect(0, 0, 88, 176)
+    Screen.flush()
