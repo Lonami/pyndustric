@@ -2,6 +2,7 @@ from .constants import *
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Union
+from string import hexdigits
 import ast
 import inspect
 import sys
@@ -1017,6 +1018,14 @@ class Compiler(ast.NodeVisitor):
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
             self.ins_append(f"control shoot {link} 0 0 0")
+        elif method == "color":
+            if len(node.args) == 1:
+                color = self.as_value(node.args[0])
+            else:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            self.ins_append(f"control color {link} {color} 0 0 0")
+
         else:
             return False
 
@@ -1120,6 +1129,9 @@ class Compiler(ast.NodeVisitor):
             elif isinstance(node.value, (int, float)):
                 return str(node.value)
             elif isinstance(node.value, str):
+                if len(str(node.value)) == 7 or len(str(node.value)) == 9: # HEX COLORS: If seperate to prevent IndexError
+                    if str(node.value)[0] == "%" and all(c in hexdigits for c in str(node.value)[1:]):
+                        return "".join(c for c in node.value if c >= " " and c != '"') 
                 return '"' + "".join(c for c in node.value if c >= " " and c != '"') + '"'
             else:
                 raise CompilerError(ERR_COMPLEX_VALUE, node)

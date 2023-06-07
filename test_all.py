@@ -1081,3 +1081,13 @@ def test_world_general():
     World.unset_flag("global")
     o = World.get_flag("global")
     print("abc", flush="announce", time=4)
+
+
+@masm_test
+def test_control_color():
+    """
+    set red %ff0000
+    control color illuminator1 red 0 0 0
+    """
+    red = "%ff0000"
+    illuminator1.color(red)

@@ -347,6 +347,8 @@ class Controllable(ABC):
         """Sets the link to shoot or not, and if shooting, the position."""
     def ceasefire(self):
         """Shorthand to stop firing."""
+    def color(self):
+        """Control color of an illuminator"""
 
 class Screen:
     """
