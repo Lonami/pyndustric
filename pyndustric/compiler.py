@@ -1129,9 +1129,11 @@ class Compiler(ast.NodeVisitor):
             elif isinstance(node.value, (int, float)):
                 return str(node.value)
             elif isinstance(node.value, str):
-                if len(str(node.value)) == 7 or len(str(node.value)) == 9: # HEX COLORS: If seperate to prevent IndexError
+                if (
+                    len(str(node.value)) == 7 or len(str(node.value)) == 9
+                ):  # HEX COLORS: If seperate to prevent IndexError
                     if str(node.value)[0] == "%" and all(c in hexdigits for c in str(node.value)[1:]):
-                        return "".join(c for c in node.value if c >= " " and c != '"') 
+                        return "".join(c for c in node.value if c >= " " and c != '"')
                 return '"' + "".join(c for c in node.value if c >= " " and c != '"') + '"'
             else:
                 raise CompilerError(ERR_COMPLEX_VALUE, node)
