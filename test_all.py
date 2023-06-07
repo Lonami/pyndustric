@@ -1087,7 +1087,9 @@ def test_world_general():
 def test_control_color():
     """
     set red %ff0000
+    set green %00ff00ff
     control color illuminator1 red 0 0 0
     """
     red = "%ff0000"
+    green = "%00ff00ff"
     illuminator1.color(red)
