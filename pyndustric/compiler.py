@@ -1030,7 +1030,10 @@ class Compiler(ast.NodeVisitor):
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
             self.ins_append(f"control color {link} {color} 0 0 0")
-
+        elif method == "config":
+            if len(node.args) != 1:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            self.ins_append(f"control config {link} {self.as_value(node.args[0])}")
         else:
             return False
 

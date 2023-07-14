@@ -1109,3 +1109,11 @@ def test_display_col():
     Screen.col(red)
     Screen.rect(0, 0, 88, 176)
     Screen.flush()
+
+
+@masm_test
+def control_config():
+    """
+    control config sorter 1 @titanium
+    """
+    sorter1.config(Env.titanium)
