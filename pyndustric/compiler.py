@@ -1255,6 +1255,17 @@ class Compiler(ast.NodeVisitor):
             self.ins_append(f"op {cmp} {output} {left} {right}")
             return output
 
+        elif isinstance(node, ast.IfExp):
+            return_label = _Label()
+            fail_label = _Label()
+            self.conditional_jump(fail_label, node.test, jump_if_test=False)
+            self.ins_append(f"set {output} {self.as_value(node.body)}")
+            self.ins_append(_Jump(return_label, "always"))
+            self.ins_append(fail_label)
+            self.ins_append(f"set {output} {self.as_value(node.orelse)}")
+            self.ins_append(return_label)
+            return output
+
         elif isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
             # foo()
             function = node.func.id

@@ -311,6 +311,22 @@ def test_if():
 
 
 @masm_test
+def test_ternary():
+    """
+    op mod %tmp0 5 1
+    jump 5 notEqual %tmp0 0
+    set %tmp1 true
+    jump 6 always
+    set %tmp1 false
+    jump 9 equal %tmp1 0
+    set a @titanium
+    jump 10 always
+    set a @thorium
+    """
+    a = Env.titanium if (True if 5 % 1 == 0 else False) else Env.thorium
+
+
+@masm_test
 def test_complex_if():
     """
     set x 1
