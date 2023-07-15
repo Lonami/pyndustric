@@ -349,6 +349,8 @@ class Controllable(ABC):
         """Shorthand to stop firing."""
     def color(self):
         """Control color of an illuminator"""
+    def config(self, config=0):
+        """Configure this block. config = eg Env.titanium for sorter1"""
 
 class Screen:
     """
