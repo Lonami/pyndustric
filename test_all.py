@@ -1133,3 +1133,24 @@ def control_config():
     control config sorter 1 @titanium
     """
     sorter1.config(Env.titanium)
+
+
+@masm_test
+def test_complex_compare():
+    """
+    op lessThan a 1 2
+    op lessThan a a 3
+    op lessThan a a 4
+    op lessThan a a 5
+    op lessThan a a 6
+    op lessThan a a 7
+    op lessThan a a 8
+    op lessThan a a 9
+    op lessThan a a 10
+    op lessThan a a 11
+    op lessThan a a 12
+    op lessThan a a 13
+    op lessThan a a 14
+    op lessThan a a 15
+    """
+    a = 1 < 2 < 3 < 4 < 5 < 6 < 7 < 8 < 9 < 10 < 11 < 12 < 13 < 14 < 15
