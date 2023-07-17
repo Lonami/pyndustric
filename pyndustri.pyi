@@ -466,9 +466,9 @@ class Unit(Senseable):
         Enable or disable the boost of the bound unit. The amount of boost is either 0 to disable or 1 to enable.
         """
     @staticmethod
-    def pathfind():
+    def pathfind(x: int, y: int):
         """
-        Command the bound unit to pathfind to the enemy core.
+        Command the bound unit to pathfind to the x and y coordinates.
         """
     @staticmethod
     def shoot(self, x: int = None, y: int = None):  # target
@@ -569,6 +569,11 @@ class Unit(Senseable):
         building, building_type = get_block(x, y)
 
         The building type can then be used as the `block_type` in `build()` and building may be used as the `config`.
+        """
+    @staticmethod
+    def unbind(self):
+        """
+        Unbinds the currently bound unit
         """
 
 Unit = Unit()

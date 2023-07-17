@@ -786,10 +786,11 @@ class Compiler(ast.NodeVisitor):
             self.ins_append(f"ucontrol boost {enable} 0 0 0 0")
 
         elif method == "pathfind":
-            if len(node.args) != 0:
+            if len(node.args) != 2:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
-            self.ins_append("ucontrol pathfind 0 0 0 0 0")
+            x, y = map(self.as_value, node.args)
+            self.ins_append(f"ucontrol pathfind {x} {y}")
 
         elif method == "shoot":
             if len(node.args) == 0:
@@ -882,7 +883,10 @@ class Compiler(ast.NodeVisitor):
                 self.ins_append(f"ucontrol build {x} {y} {block} {rotation} {config}")
             else:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
-
+        elif method == "unbind":
+            if len(node.args) > 0:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+            self.ins_append("ucontrol unbind")
         else:
             raise CompilerError(ERR_UNSUPPORTED_SYSCALL, node)
 
