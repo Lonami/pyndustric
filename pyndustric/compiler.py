@@ -257,8 +257,19 @@ class Compiler(ast.NodeVisitor):
     def conditional_jump(self, destination_label, test, jump_if_test=True):
         if isinstance(test, ast.Compare):
             if len(test.ops) != 1 or len(test.comparators) != 1:
-                raise CompilerError(ERR_UNSUPPORTED_EXPR, test)
-
+                # 1 < 2 < 3: Compare(left=1, ops=[<, <], comparators=[2, 3])
+                tmp = self._tmp_var_name()
+                # evaluate left: 1 op, 1 comparator remaining
+                # op lessThan %tmp 1 2 (tmp = 1 < 2)
+                self.ins_append(
+                    f"op {BIN_CMP.get(type(test.ops.pop(0)))} {tmp} {self.as_value(test.left)} {self.as_value(test.comparators.pop(0))}"
+                )
+                # leave one for below
+                for i in range(len(test.ops) - 1):
+                    # tmp = tmp < n
+                    self.ins_append(
+                        f"op {BIN_CMP.get(type(test.ops.pop(0)))} {tmp} {tmp} {self.as_value(test.comparators.pop(0))}"
+                    )
             cmp = BIN_CMP.get(type(test.ops[0]))
             left = self.as_value(test.left)
             right = self.as_value(test.comparators[0])
@@ -1242,17 +1253,15 @@ class Compiler(ast.NodeVisitor):
             return output
 
         elif isinstance(node, ast.Compare):
-            # 1 < 2
-            if len(node.ops) != 1 or len(node.comparators) != 1:
-                raise CompilerError(ERR_UNSUPPORTED_EXPR)
-
-            cmp = BIN_CMP.get(type(node.ops[0]))
-            if cmp is None:
-                raise CompilerError(ERR_UNSUPPORTED_OP, node, node.ops[0].__class__.__name__)
-
-            left = self.as_value(node.left)
-            right = self.as_value(node.comparators[0])
-            self.ins_append(f"op {cmp} {output} {left} {right}")
+            # 1 < 2 (<3)?
+            # see [conditional_jump] for comments
+            self.ins_append(
+                f"op {BIN_CMP.get(type(node.ops.pop(0)))} {output} {self.as_value(node.left)} {self.as_value(node.comparators.pop(0))}"
+            )
+            for i, op in enumerate(node.ops):
+                self.ins_append(
+                    f"op {BIN_CMP.get(type(op))} {output} {output} {self.as_value(node.comparators[i])}"
+                )
             return output
 
         elif isinstance(node, ast.IfExp):

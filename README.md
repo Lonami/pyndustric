@@ -52,6 +52,7 @@ Assignment and all operators you know and love:
 x = 10
 y = x ** 2
 y -= 2.5
+z = x < y > (4 if x < 2 else 6)
 ```
 
 If-elif-else blocks:
