@@ -1130,9 +1130,9 @@ def test_display_col():
 
 
 @masm_test
-def control_config():
+def test_control_config():
     """
-    control config sorter 1 @titanium
+    control config sorter1 @titanium
     """
     sorter1.config(Env.titanium)
 
