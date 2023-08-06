@@ -377,22 +377,22 @@ class Screen:
         """
     @staticmethod
     def deg_line(x0: int, y0: int, degrees: float, magnitude: float):
-    	"""
-    	Draw a line with vector data. 
-    	
-    	Line drawn is from `(x0, y0)` to `magnitude` pixels toward `degrees` degrees counterclockwise from east (90° -> up).
+        """
+        Draw a line with vector data.
+
+        Line drawn is from `(x0, y0)` to `magnitude` pixels toward `degrees` degrees counterclockwise from east (90° -> up).
 
         The line will be as wide as previously defined by `stroke`, and the ends will be straight.
-    	"""
+        """
     @staticmethod
     def rad_line(x0: int, y0: int, radians: float, magnitude: float):
-    	"""
-    	Draw a line with vector data. 
-    	
-    	Line drawn is from `(x0, y0)` to `magnitude` pixels toward `radians` radians counterclockwise from east (π/2 -> up).
+        """
+        Draw a line with vector data.
+
+        Line drawn is from `(x0, y0)` to `magnitude` pixels toward `radians` radians counterclockwise from east (π/2 -> up).
 
         The line will be as wide as previously defined by `stroke`, and the ends will be straight.
-    	"""
+        """
     @staticmethod
     def rect(x: int, y: int, width: int, height: int):
         """
