@@ -7,7 +7,6 @@ import re
 import sys
 import tempfile
 
-
 _REG_TMP_RE = re.compile(r"\b" + pyndustric.REG_TMP_FMT.replace("{}", r"(\w+)") + r"\b")
 
 
@@ -1156,3 +1155,16 @@ def test_complex_compare():
     op lessThan a a 15
     """
     a = 1 < 2 < 3 < 4 < 5 < 6 < 7 < 8 < 9 < 10 < 11 < 12 < 13 < 14 < 15
+
+@masm_test
+def test_angle_lines():
+    """
+    draw line 50 50 42 44
+    draw line 30 25 30 30
+    draw line 50 50 42 44
+    draw line 30 25 30 30
+    """
+    Screen.deg_line(50, 50, 220, 10)
+    Screen.deg_line(30, 25, 90, 5)
+    Screen.rad_line(50, 50, 3.84, 10)
+    Screen.rad_line(30, 25, 1.57, 5)

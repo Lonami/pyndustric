@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Union
 from string import hexdigits
+from math import sin, cos, radians
 import ast
 import inspect
 import sys
@@ -673,6 +674,28 @@ class Compiler(ast.NodeVisitor):
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
             x0, y0, x1, y1 = map(self.as_value, node.args)
+            self.ins_append(f"draw line {x0} {y0} {x1} {y1}")
+
+        elif method == "deg_line":
+            if len(node.args) != 4:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            x0, y0, degs, magnitude = map(self.as_value, node.args)
+
+            x1 = round(int(x0) + cos(radians(float(degs))) * float(magnitude))
+            y1 = round(int(y0) + sin(radians(float(degs))) * float(magnitude))
+
+            self.ins_append(f"draw line {x0} {y0} {x1} {y1}")
+
+        elif method == "rad_line":
+            if len(node.args) != 4:
+                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+
+            x0, y0, rads, magnitude = map(self.as_value, node.args)
+
+            x1 = round(int(x0) + cos(float(rads)) * float(magnitude))
+            y1 = round(int(y0) + sin(float(rads)) * float(magnitude))
+
             self.ins_append(f"draw line {x0} {y0} {x1} {y1}")
 
         elif method == "rect":
