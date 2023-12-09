@@ -43,5 +43,5 @@ extra_css:
 nav:
 - Pyndustric:
   - index.md
-  - Setup: installation.md
+  - Setup: setup.md
   - Supported Features: supported.md
