@@ -1,0 +1,47 @@
+site_name: Pyndustric
+
+theme:
+  name: material
+
+  palette:
+  - media: "(prefers-color-scheme: light)"
+    scheme: default
+    primary: red
+    accent: blue
+    toggle:
+      icon: material/toggle-switch
+
+  - media: "(prefers-color-scheme: dark)"
+    scheme: slate
+    primary: red
+    accent: purple
+    toggle:
+      icon: material/toggle-switch-off-outline
+
+  features:
+  - navigation.path
+  - navigation.indexes
+  - navigation.instant
+  - navigation.instant.prefetch
+  - navigation.instant.progress
+  - navigation.tracking
+  - navigation.tabs
+  - navigation.tabs.sticky
+  - navigation.sections
+  - toc.follow
+  - toc.integrate
+
+markdown_extensions:
+- def_list
+- admonition
+- pymdownx.details
+- pymdownx.superfences
+
+extra_css:
+- styles.css
+
+nav:
+- Pyndustric:
+  - index.md
+  - Setup: installation.md
+  - Supported Features: supported.md
