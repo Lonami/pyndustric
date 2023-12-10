@@ -1,4 +1,4 @@
 pytest==6.2.5
 black==22.8.0
-pydoc-markdown==4.8.2
-mkdocs-material==9.5
+pydoc-markdown
+mkdocs-material

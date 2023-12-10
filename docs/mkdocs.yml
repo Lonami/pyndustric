@@ -1,0 +1,8 @@
+docs_dir: content
+nav:
+- Home: index.md
+- API Documentation:
+  - pyndustric: api-documentation/pyndustric.md
+repo_url: https://github.com/Me/my-project
+site_name: My Project
+theme: readthedocs
