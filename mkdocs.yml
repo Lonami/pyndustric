@@ -37,14 +37,3 @@ markdown_extensions:
 - pymdownx.details
 - pymdownx.superfences
 
-extra_css:
-- styles.css
-
-nav:
-- Pyndustric:
-  - index.md
-  - Setup: setup.md
-  - Supported Features: supported.md
-- API Reference:
-  - api/index.md
-  - Env: api/env.md
