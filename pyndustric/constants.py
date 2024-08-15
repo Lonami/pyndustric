@@ -17,6 +17,7 @@ ERR_ARGC_MISMATCH = "ArgumentsError"
 ERR_TOO_LONG = "OverflowError"
 ERR_INVALID_SOURCE = "CompilerError"
 ERR_BAD_TUPLE_ASSIGN = "BadTupleError"
+INTERNAL_COMPILER_ERR = "InternalCompilerError"
 
 ERROR_DESCRIPTIONS = {
     ERR_COMPLEX_ASSIGN: "cannot perform complex assignment `{unparsed}`",
@@ -36,6 +37,7 @@ ERROR_DESCRIPTIONS = {
     ERR_TOO_LONG: "the program is too long to fit in a logic processor",
     ERR_INVALID_SOURCE: "the provided source type to compile is not supported",
     ERR_BAD_TUPLE_ASSIGN: "can only assign to a tuple if the right-hand side is a tuple of the same length",
+    INTERNAL_COMPILER_ERR: "internal compiler error",
 }
 
 BIN_CMP = {
