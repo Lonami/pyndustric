@@ -26,6 +26,8 @@ def masm_test(source_func):
     The special value `%tmpD`, where D is an integer, will be replaced by the matching `REG_TMP_FMT`.
     The temporary names are ordered by time of appearance (meaning `__pyc_tmp_2` can be `%tmp0` and
     `__pyc_tmp_1` be `%tmp1` if they appear in this order in the generated masm).
+
+    Any keyword arguments in the function are passed to the compiler
     """
     dbg_name = f"{source_func.__name__}:{inspect.currentframe().f_back.f_lineno}"
 
@@ -33,7 +35,12 @@ def masm_test(source_func):
     def wrapped():
         assert source_func.__doc__ is not None, "bad `masm_test` usage; def should have docstring"
         expected = as_masm(source_func.__doc__)
-        masm = pyndustric.Compiler().compile(source_func)
+        kwargs = {
+            k: v.default
+            for k, v in inspect.signature(source_func).parameters.items()
+            if v.default != inspect._empty
+        }
+        masm = pyndustric.Compiler().compile(source_func, **kwargs)
 
         tmp = 0
         while True:
@@ -49,12 +56,12 @@ def masm_test(source_func):
     return wrapped
 
 
-def expect_err(err, source):
+def expect_err(err, source, **kwargs):
     """
     Expect the error to be raised, and fail if it's not.
     """
     with pytest.raises(pyndustric.CompilerError, match=err):
-        pyndustric.Compiler().compile(source)
+        pyndustric.Compiler().compile(source, **kwargs)
 
 
 def test_all_err_have_desc_and_tests():
@@ -207,6 +214,73 @@ def test_compile_function():
 
     masm = pyndustric.Compiler().compile(source2)
     assert masm == expected
+
+
+def test_inline():
+    def source():
+        def f():
+            x = 1
+
+        f()
+
+    expected = as_masm(
+        """\
+        jump 5 always
+        read __pyc_rc_0 cell1 __pyc_sp
+        set x 1
+        op add @counter __pyc_rc_0 1
+        write @counter cell1 __pyc_sp
+        jump 2 always
+        set __pyc_tmp_1 __pyc_ret
+        """
+    )
+    expected_inline = as_masm(
+        """\
+        set x 1
+        """
+    )
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+    masm = pyndustric.Compiler().compile(source, inline=True)
+    assert masm == expected_inline
+
+
+def test_inline_return():
+    def source():
+        def f():
+            x = 1
+            return x
+
+        rtn = f()
+
+    expected = as_masm(
+        """\
+        jump 7 always
+        read __pyc_rc_0 cell1 __pyc_sp
+        set x 1
+        set __pyc_ret x
+        jump 6 always
+        op add @counter __pyc_rc_0 1
+        write @counter cell1 __pyc_sp
+        jump 2 always
+        set rtn __pyc_ret
+        """
+    )
+    expected_inline = as_masm(
+        """\
+        set x 1
+        set __pyc_ret x
+        set rtn __pyc_ret
+        """
+    )
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+    masm = pyndustric.Compiler().compile(source, inline=True)
+    assert masm == expected_inline
 
 
 @masm_test

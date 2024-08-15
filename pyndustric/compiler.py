@@ -1,3 +1,5 @@
+from re import sub
+
 from .constants import *
 from dataclasses import dataclass
 from pathlib import Path
@@ -146,6 +148,7 @@ class Compiler(ast.NodeVisitor):
         self._in_def = None  # current function name
         self._epilogue = None  # current function's epilogue label
         self._functions = {}
+        self._inline_functions = {}
         self._tmp_var_counter = 0
         self._scope_start_label = (
             []
@@ -162,7 +165,9 @@ class Compiler(ast.NodeVisitor):
         self._tmp_var_counter += 1
         return REG_TMP_FMT.format(self._tmp_var_counter)
 
-    def compile(self, code: Union[str, Callable, Path]):
+    def compile(self, code: Union[str, Callable, Path], inline=False):
+        self.inline = inline
+
         if inspect.isfunction(code):
             code = textwrap.dedent(inspect.getsource(code))
             # i.e. `tree.body_of_tree[def].body_of_function`
@@ -444,59 +449,66 @@ class Compiler(ast.NodeVisitor):
             raise CompilerError(ERR_REDEF, node, a=node.name)
 
         self._in_def = node.name
-        reg_ret = f"{REG_RET_COUNTER_PREFIX}{len(self._functions)}"
 
-        args = node.args
-        if any(
-            (
-                args.vararg,
-                args.kwonlyargs,
-                args.kw_defaults,
-                args.kwarg,
-                args.defaults,
-            )
-        ):
-            raise CompilerError(ERR_INVALID_DEF, node, a=node.name)
+        if self.inline:
+            self._inline_functions[node.name] = node.body
+        else:
+            reg_ret = f"{REG_RET_COUNTER_PREFIX}{len(self._functions)}"
 
-        if sys.version_info >= (3, 8):
-            if args.posonlyargs:
+            args = node.args
+            if any(
+                (
+                    args.vararg,
+                    args.kwonlyargs,
+                    args.kw_defaults,
+                    args.kwarg,
+                    args.defaults,
+                )
+            ):
                 raise CompilerError(ERR_INVALID_DEF, node, a=node.name)
 
-        # TODO it's better to put functions at the end and not have to skip them as code, but jumps need fixing
-        end = _Label()
-        self.ins_append(_Jump(end, "always"))
+            if sys.version_info >= (3, 8):
+                if args.posonlyargs:
+                    raise CompilerError(ERR_INVALID_DEF, node, a=node.name)
 
-        prologue = _Label()
-        self.ins_append(prologue)
-        self._functions[node.name] = Function(start=prologue, argc=len(args.args))
+            # TODO it's better to put functions at the end and not have to skip them as code, but jumps need fixing
+            end = _Label()
+            self.ins_append(_Jump(end, "always"))
 
-        self.ins_append(f"read {reg_ret} cell1 {REG_STACK}")
-        for arg in reversed(args.args):
-            self.ins_append(f"op sub {REG_STACK} {REG_STACK} 1")
-            self.ins_append(f"read {arg.arg} cell1 {REG_STACK}")
+            prologue = _Label()
+            self.ins_append(prologue)
+            self._functions[node.name] = Function(start=prologue, argc=len(args.args))
 
-        # This relies on the fact that there are no nested definitions.
-        # Set the epilogue now so that `visit_Return` can use this label.
-        self._epilogue = _Label()
+            self.ins_append(f"read {reg_ret} cell1 {REG_STACK}")
+            for arg in reversed(args.args):
+                self.ins_append(f"op sub {REG_STACK} {REG_STACK} 1")
+                self.ins_append(f"read {arg.arg} cell1 {REG_STACK}")
 
-        for subnode in node.body:
-            self.visit(subnode)
+            # This relies on the fact that there are no nested definitions.
+            # Set the epilogue now so that `visit_Return` can use this label.
+            self._epilogue = _Label()
 
-        self.ins_append(self._epilogue)
+            for subnode in node.body:
+                self.visit(subnode)
 
-        # Add 1 to the return value to skip the jump that made the call.
-        self.ins_append(f"op add @counter {reg_ret} 1")
-        self.ins_append(end)
-        self._in_def = None
-        self._epilogue = None
+            self.ins_append(self._epilogue)
+
+            # Add 1 to the return value to skip the jump that made the call.
+            self.ins_append(f"op add @counter {reg_ret} 1")
+            self.ins_append(end)
+            self._in_def = None
+            self._epilogue = None
 
     def visit_Return(self, node):
-        if not self._epilogue:
+        if not self._epilogue and not self.inline:
             raise InternalCompilerError("return encountered with epilogue being unset", node)
 
         val = self.as_value(node.value)
-        self.ins_append(f"set {REG_RET} {val}")
-        self.ins_append(_Jump(self._epilogue, "always"))
+        if self.inline:
+            self.ins_append(f"set {REG_RET} {val}")
+        else:
+            self.ins_append(f"set {REG_RET} {val}")
+            self.ins_append(_Jump(self._epilogue, "always"))
 
     def visit_Expr(self, node):
         call = node.value
@@ -1299,6 +1311,11 @@ class Compiler(ast.NodeVisitor):
                 self.ins_append(f"op {function} {output} {operands}")
                 return output
 
+            elif self.inline:
+                body = self._inline_functions.get(node.func.id)
+                for subnode in body:
+                    self.visit(subnode)
+                return REG_RET
             else:
                 fn = self._functions.get(node.func.id)
                 if fn is None:
