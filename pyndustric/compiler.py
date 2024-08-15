@@ -1292,7 +1292,8 @@ class Compiler(ast.NodeVisitor):
                         n1=len(node.args),
                         called=node.func.id,
                         n2=argc,
-                        plural1=plural(len(node.args), plural2=plural(argc)),
+                        plural1=plural(len(node.args)),
+                        plural2=plural(argc),
                     )
 
                 operands = " ".join(self.as_value(arg) for arg in node.args)
