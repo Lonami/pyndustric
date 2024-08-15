@@ -191,7 +191,7 @@ class Compiler(ast.NodeVisitor):
         raise CompilerError(ERR_UNSUPPORTED_IMPORT, node, a=node.names[0].name)
 
     def visit_ImportFrom(self, node: ast.ImportFrom):
-        if node.module != "pyndustri":
+        if node.module not in ("pyndustri", "pyndustric"):
             raise CompilerError(ERR_UNSUPPORTED_IMPORT, node, a=node.module)
 
     def visit_Assign(self, node: ast.Assign):
