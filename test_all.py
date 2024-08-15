@@ -950,7 +950,7 @@ def test_unit_actions():
     ucontrol within 6 7 8 w 0
     ucontrol boost 1 0 0 0 0
     ucontrol boost 0 0 0 0 0
-    ucontrol pathfind 0 0 0 0 0
+    ucontrol pathfind 5 5
     ucontrol targetp @unit 1 0 0 0
     ucontrol target 9 10 1 0 0
     ucontrol target 0 0 0 0 0
@@ -971,6 +971,7 @@ def test_unit_actions():
     ucontrol build 23 24 @sorter 0 @titanium
     ucontrol getBlock 25 26 bt building1 0
     ucontrol getBlock 27 28 0 building2 0
+    ucontrol unbind
     """
     Unit.idle()
     Unit.stop()
@@ -979,7 +980,7 @@ def test_unit_actions():
     w = Unit.within(6, 7, 8)
     Unit.boost(1)
     Unit.boost(0)
-    Unit.pathfind()
+    Unit.pathfind(5, 5)
     Unit.shoot()
     Unit.shoot(9, 10)
     Unit.ceasefire()
@@ -1000,6 +1001,7 @@ def test_unit_actions():
     Unit.build(23, 24, Env.sorter, 0, Env.titanium)
     building1, bt = Unit.get_block(25, 26)
     (building2,) = Unit.get_block(27, 28)
+    Unit.unbind()
 
 
 @masm_test
