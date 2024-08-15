@@ -63,7 +63,7 @@ class Function:
 
 
 class CompilerError(ValueError):
-    def __init__(self, code, node: ast.AST, **context):
+    def __init__(self, code, node: ast.AST, desc="", **context):
         if node is None:
             node = ast.Module(lineno=0, col_offset=0)  # dummy value
 
@@ -76,7 +76,7 @@ class CompilerError(ValueError):
         ]:
             context["unparsed"] = ast.unparse(node)
         super().__init__(
-            f"[{code}/{node.lineno}:{node.col_offset}] {ERROR_DESCRIPTIONS[code].format(**context)}"
+            f" {code}: {ERROR_DESCRIPTIONS[code].format(**context)}, line {node.lineno}, column {node.col_offset}\n{desc}"
         )
 
 
