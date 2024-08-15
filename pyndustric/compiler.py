@@ -742,15 +742,16 @@ class Compiler(ast.NodeVisitor):
             if len(node.args) != 1:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
-            if not isinstance(node.args[0], ast.Constant):
+            if isinstance(node.args[0], ast.Constant):
+                unit = node.args[0].value
+
+                if not isinstance(unit, str):
+                    raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+                self.ins_append(f"ubind @{unit}")
+            elif isinstance(node.args[0], ast.Name):
+                self.ins_append(f"ubind {node.args[0].id}")
+            else:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
-
-            unit = node.args[0].value
-
-            if not isinstance(unit, str):
-                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
-
-            self.ins_append(f"ubind @{unit}")
 
         elif method == "idle":
             if len(node.args) != 0:
