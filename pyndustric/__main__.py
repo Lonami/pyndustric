@@ -16,7 +16,7 @@ def create_args():
         "-i",
         "--inline",
         action="store_true",
-        help="inline all the functions (copy/paste them, instead of treating them line functions)",
+        help="inline all the functions (copy/paste them, instead of treating them like functions)",
     )
     parser.add_argument(
         "-c",
