@@ -18,6 +18,7 @@ ERR_TOO_LONG = "E016"
 ERR_INVALID_SOURCE = "E017"
 ERR_BAD_TUPLE_ASSIGN = "E018"
 
+
 ERROR_DESCRIPTIONS = {
     ERR_COMPLEX_ASSIGN: "cannot perform complex assignment `{unparsed}`",
     ERR_COMPLEX_VALUE: "cannot evaluate complex value `{unparsed}`",
@@ -154,6 +155,8 @@ RES_MAP = {
     "payload": "@payloadCount",
     "payload_type": "@payloadType",
 }
+
+ALLOWED_DECORATORS = ("inline",)
 
 REG_STACK = "__pyc_sp"
 REG_RET = "__pyc_ret"

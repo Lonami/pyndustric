@@ -223,6 +223,13 @@ def test_inline():
 
         f()
 
+    def source_inline():
+        @inline
+        def f():
+            x = 1
+
+        f()
+
     expected = as_masm(
         """\
         jump 5 always
@@ -243,12 +250,20 @@ def test_inline():
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
-    masm = pyndustric.Compiler().compile(source, inline=True)
+    masm = pyndustric.Compiler().compile(source_inline)
     assert masm == expected_inline
 
 
 def test_inline_return():
     def source():
+        def f():
+            x = 1
+            return x
+
+        rtn = f()
+
+    def source_inline():
+        @inline
         def f():
             x = 1
             return x
@@ -279,7 +294,7 @@ def test_inline_return():
     masm = pyndustric.Compiler().compile(source)
     assert masm == expected
 
-    masm = pyndustric.Compiler().compile(source, inline=True)
+    masm = pyndustric.Compiler().compile(source_inline)
     assert masm == expected_inline
 
 

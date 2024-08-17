@@ -149,6 +149,7 @@ class Compiler(ast.NodeVisitor):
         self._epilogue = None  # current function's epilogue label
         self._functions = {}
         self._inline_functions = {}
+        self._in_inline_function = False
         self._tmp_var_counter = 0
         self._scope_start_label = (
             []
@@ -165,9 +166,7 @@ class Compiler(ast.NodeVisitor):
         self._tmp_var_counter += 1
         return REG_TMP_FMT.format(self._tmp_var_counter)
 
-    def compile(self, code: Union[str, Callable, Path], inline=False):
-        self.inline = inline
-
+    def compile(self, code: Union[str, Callable, Path]):
         if inspect.isfunction(code):
             code = textwrap.dedent(inspect.getsource(code))
             # i.e. `tree.body_of_tree[def].body_of_function`
@@ -450,7 +449,13 @@ class Compiler(ast.NodeVisitor):
 
         self._in_def = node.name
 
-        if self.inline:
+        decorators = [i.id for i in node.decorator_list]
+        # Check that all the decorators are valid
+        if any(map(lambda decorator: decorator not in ALLOWED_DECORATORS, decorators)):
+            # TODO: Add description specifiying that the decorator is the problem
+            raise CompilerError(ERR_INVALID_DEF, node, a=node.name)
+
+        if "inline" in decorators:
             self._inline_functions[node.name] = node.body
         else:
             reg_ret = f"{REG_RET_COUNTER_PREFIX}{len(self._functions)}"
@@ -500,11 +505,11 @@ class Compiler(ast.NodeVisitor):
             self._epilogue = None
 
     def visit_Return(self, node):
-        if not self._epilogue and not self.inline:
+        if not self._epilogue and not self._in_inline_function:
             raise InternalCompilerError("return encountered with epilogue being unset", node)
 
         val = self.as_value(node.value)
-        if self.inline:
+        if self._in_inline_function:
             self.ins_append(f"set {REG_RET} {val}")
         else:
             self.ins_append(f"set {REG_RET} {val}")
@@ -1311,10 +1316,12 @@ class Compiler(ast.NodeVisitor):
                 self.ins_append(f"op {function} {output} {operands}")
                 return output
 
-            elif self.inline:
-                body = self._inline_functions.get(node.func.id)
+            elif node.func.id in self._inline_functions:
+                body = self._inline_functions[node.func.id]
+                self._in_inline_function = True
                 for subnode in body:
                     self.visit(subnode)
+                self._in_inline_function = False
                 return REG_RET
             else:
                 fn = self._functions.get(node.func.id)
