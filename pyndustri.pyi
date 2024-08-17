@@ -63,7 +63,7 @@ class Env:
         The value is a number representing the index of the *next* instruction.
         """
     @staticmethod
-    def links(self) -> Iterator[Link]:
+    def links() -> Iterator[Link]:
         """Used to iterate over all the links."""
     @property
     def link_count(self) -> int:
@@ -206,94 +206,94 @@ class Senseable(ABC):
 
     @property
     def copper(self) -> int:
-        """The amount  copper in the link"""
+        """The amount copper stored or carried by the link"""
     @property
     def lead(self) -> int:
-        """The amount of lead in the link"""
+        """The amount of lead stored or carried by the link"""
     @property
     def metaglass(self) -> int:
-        """The amount of metaglass in the link"""
+        """The amount of metaglass stored or carried by the link"""
     @property
     def graphite(self) -> int:
-        """The amount of graphite in the link"""
+        """The amount of graphite stored or carried by the link"""
     @property
     def sand(self) -> int:
-        """The amount of sand in the link"""
+        """The amount of sand stored or carried by the link"""
     @property
     def coal(self) -> int:
-        """The amount of coal in the link"""
+        """The amount of coal stored or carried by the link"""
     @property
     def titanium(self) -> int:
-        """The amount of titanium in the link"""
+        """The amount of titanium stored or carried by the link"""
     @property
     def thorium(self) -> int:
-        """The amount of thorium in the link"""
+        """The amount of thorium stored or carried by the link"""
     @property
     def scrap(self) -> int:
-        """The amount of scrap in the link"""
+        """The amount of scrap stored or carried by the link"""
     @property
     def silicon(self) -> int:
-        """The amount of silicon in the link"""
+        """The amount of silicon stored or carried by the link"""
     @property
     def plastanium(self) -> int:
-        """The amount of plastanium in the link"""
+        """The amount of plastanium stored or carried by the link"""
     @property
     def phase_fabric(self) -> int:
-        """The amount of phase_fabric in the link"""
+        """The amount of phase_fabric stored or carried by the link"""
     @property
     def surge_alloy(self) -> int:
-        """The amount of surge_alloy in the link"""
+        """The amount of surge_alloy stored or carried by the link"""
     @property
     def spore_pod(self) -> int:
-        """The amount of spore_pod in the link"""
+        """The amount of spore_pod stored or carried by the link"""
     @property
     def blast_compound(self) -> int:
-        """The amount of blast_compound in the link"""
+        """The amount of blast_compound stored or carried by the link"""
     @property
     def pyratite(self) -> int:
-        """The amount of pyratite in the link"""
+        """The amount of pyratite stored or carried by the link"""
     @property
     def beryllium(self) -> int:
-        """The amount of beryllium in the link"""
+        """The amount of beryllium stored or carried by the link"""
     @property
     def tungsten(self) -> int:
-        """The amount of tungsten in the link"""
+        """The amount of tungsten stored or carried by the link"""
     @property
     def oxide(self) -> int:
-        """The amount of oxide in the link"""
+        """The amount of oxide stored or carried by the link"""
     @property
     def carbide(self) -> int:
-        """The amount of carbide in the link"""
+        """The amount of carbide stored or carried by the link"""
     @property
     def water(self) -> int:
-        """The amount of water in the link"""
+        """The amount of water stored or carried by the link"""
     @property
     def slag(self) -> int:
-        """The amount of slag in the link"""
+        """The amount of slag stored or carried by the link"""
     @property
     def oil(self) -> int:
-        """The amount of oil in the link"""
+        """The amount of oil stored or carried by the link"""
     @property
     def cryofluid(self) -> int:
-        """The amount of cryofluid in the link"""
+        """The amount of cryofluid stored or carried by the link"""
     @property
     def neoplasm(self) -> int:
-        """The amount of neoplasm in the link"""
+        """The amount of neoplasm stored or carried by the link"""
     @property
     def arkycite(self) -> int:
-        """The amount of arkycite in the link"""
+        """The amount of arkycite stored or carried by the link"""
     @property
     def ozone(self) -> int:
-        """The amount of ozone in the link"""
+        """The amount of ozone stored or carried by the link"""
     @property
     def hydrogen(self) -> int:
-        """The amount of hydrogen in the link"""
+        """The amount of hydrogen stored or carried by the link"""
     @property
     def nitrogen(self) -> int:
-        """The amount of nitrogen in the link"""
+        """The amount of nitrogen stored or carried by the link"""
     @property
     def cyanogen(self) -> int:
-        """The amount of cyanogen in the link"""
+        """The amount of cyanogen stored or carried by the link"""
     @property
     def items(self) -> int:
         """The sum of all items contained or carried by the link."""
@@ -610,7 +610,7 @@ class Unit(Senseable):
         Command the unit to mine at the specified coordinates.
         """
     @property
-    def flag() -> int:
+    def flag(self) -> int:
         """
         Store a user-provided number in the unit for later use (for example, to "flag" this unit already was used).
         """
@@ -652,7 +652,7 @@ class Unit(Senseable):
         You can pass another block variable as config to copy the configuration of that block.
         """
     @staticmethod
-    def get_block(x, y):  # getBlock-------------------------------------
+    def get_block(x, y) -> Building:  # getBlock
         """
         Return the building and optionally its type located at `(x, y)`:
 
