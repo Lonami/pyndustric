@@ -1,50 +1,87 @@
 from abc import ABC
-from typing import Iterator, Optional, Union
+from typing import Iterator
 
 class Link:
     """Represents a link."""
+
+class Content:
+    """A fundemental resource identifier"""
 
 class Env:
     """
     Access to special environmental variables.
     """
 
+    copper: Content
+    lead: Content
+    metaglass: Content
+    graphite: Content
+    sand: Content
+    coal: Content
+    titanium: Content
+    thorium: Content
+    scrap: Content
+    silicon: Content
+    plastanium: Content
+    phase_fabric: Content
+    surge_alloy: Content
+    spore_pod: Content
+    blast_compound: Content
+    pyratite: Content
+    beryllium: Content
+    tungsten: Content
+    oxide: Content
+    carbide: Content
+
+    water: Content
+    slag: Content
+    oil: Content
+    cryofluid: Content
+    neoplasm: Content
+    arkycite: Content
+    ozone: Content
+    hydrogen: Content
+    nitrogen: Content
+    cyanogen: Content
+
+    null: None
+
     @property
-    def this():
+    def this(self) -> Building:
         """Return the `Building` object representing this logic processor."""
     @property
-    def x():
+    def x(self) -> int:
         """Return the `x` coordinate where `this` is located."""
     @property
-    def y():
+    def y(self) -> int:
         """Return the `y` coordinate where `this` is located."""
     @property
-    def counter() -> int:
+    def counter(self) -> int:
         """
         Return the Program Counter (also known as Instruction Pointer).
 
         The value is a number representing the index of the *next* instruction.
         """
     @staticmethod
-    def links() -> Iterator[Link]:
+    def links(self) -> Iterator[Link]:
         """Used to iterate over all the links."""
     @property
-    def link_count():
+    def link_count(self) -> int:
         """Return how many links there are connected to `this` logic processor."""
     @property
-    def time() -> float:
+    def time(self) -> float:
         """Return the current UNIX timestamp, in milliseconds."""
     @property
-    def width() -> int:
+    def width(self) -> int:
         """Return the width of the entire map, in tiles."""
     @property
-    def height() -> int:
+    def height(self) -> int:
         """Return the height of the entire map, in tiles."""
     @property
-    def ips() -> float:
+    def ips(self) -> float:
         # https://github.com/Anuken/Mindustry/blob/b7f030eb1342fc4fd7c46274bfa9ed7af25f5829/core/src/mindustry/world/blocks/logic/LogicBlock.java#L128
         """Return the amount of instructions per second this processor is capable of executing."""
-    def __getattr__(self):
+    def __getattr__(self) -> Content:
         """
         Return an arbitrary `@variable`.
 
@@ -65,7 +102,7 @@ class World:
             Type can also be "core"
             """
         @staticmethod
-        def index(type: str, team: str, index: int) -> Resource:
+        def index(type: str, team: str, index: int) -> Content:
             """
             Get the block of type type (eg "Env.conveyor") at index index.
             Type can also be "core"
@@ -83,10 +120,10 @@ class World:
         def get_build() -> Senseable:  # tbh not sure what the difference between a block and a building is
             """Get building. Usage: build = World.blocks[x][y].get_build()"""
         @staticmethod
-        def get_ore() -> Resource:
+        def get_ore() -> Content:
             """Get ore. Usage: ore = World.blocks[x][y].get_ore()"""
         @staticmethod
-        def get_floor() -> Resource:
+        def get_floor() -> Content:
             """Get floor. Usage: floor = World.blocks[x][y].get_floor()"""
     @staticmethod
     def fetch_player(team: str, index: int):
@@ -169,69 +206,99 @@ class Senseable(ABC):
 
     @property
     def copper(self) -> int:
-        """Amount of Copper stored or carried by the link."""
+        """The amount  copper in the link"""
     @property
     def lead(self) -> int:
-        """Amount of Lead stored or carried by the link."""
-    @property
-    def coal(self) -> int:
-        """Amount of Coal stored or carried by the link."""
-    @property
-    def graphite(self) -> int:
-        """Amount of Graphite stored or carried by the link."""
-    @property
-    def titanium(self) -> int:
-        """Amount of Titanium stored or carried by the link."""
-    @property
-    def thorium(self) -> int:
-        """Amount of Thorium stored or carried by the link."""
-    @property
-    def silicon(self) -> int:
-        """Amount of Silicon stored or carried by the link."""
-    @property
-    def plastanium(self) -> int:
-        """Amount of Plastanium stored or carried by the link."""
-    @property
-    def phase_fabric(self) -> int:
-        """Amount of Phase Fabric stored or carried by the link."""
-    @property
-    def surge_alloy(self) -> int:
-        """Amount of Surge Alloy stored or carried by the link."""
-    @property
-    def spore_pod(self) -> int:
-        """Amount of Spore Pod stored or carried by the link."""
-    @property
-    def sand(self) -> int:
-        """Amount of Sand stored or carried by the link."""
-    @property
-    def blast_compound(self) -> int:
-        """Amount of Blast Compound stored or carried by the link."""
-    @property
-    def pyratite(self) -> int:
-        """Amount of Pyratite stored or carried by the link."""
+        """The amount of lead in the link"""
     @property
     def metaglass(self) -> int:
-        """Amount of Metaglass stored or carried by the link."""
+        """The amount of metaglass in the link"""
+    @property
+    def graphite(self) -> int:
+        """The amount of graphite in the link"""
+    @property
+    def sand(self) -> int:
+        """The amount of sand in the link"""
+    @property
+    def coal(self) -> int:
+        """The amount of coal in the link"""
+    @property
+    def titanium(self) -> int:
+        """The amount of titanium in the link"""
+    @property
+    def thorium(self) -> int:
+        """The amount of thorium in the link"""
     @property
     def scrap(self) -> int:
-        """Amount of Scrap stored or carried by the link."""
+        """The amount of scrap in the link"""
+    @property
+    def silicon(self) -> int:
+        """The amount of silicon in the link"""
+    @property
+    def plastanium(self) -> int:
+        """The amount of plastanium in the link"""
+    @property
+    def phase_fabric(self) -> int:
+        """The amount of phase_fabric in the link"""
+    @property
+    def surge_alloy(self) -> int:
+        """The amount of surge_alloy in the link"""
+    @property
+    def spore_pod(self) -> int:
+        """The amount of spore_pod in the link"""
+    @property
+    def blast_compound(self) -> int:
+        """The amount of blast_compound in the link"""
+    @property
+    def pyratite(self) -> int:
+        """The amount of pyratite in the link"""
+    @property
+    def beryllium(self) -> int:
+        """The amount of beryllium in the link"""
+    @property
+    def tungsten(self) -> int:
+        """The amount of tungsten in the link"""
+    @property
+    def oxide(self) -> int:
+        """The amount of oxide in the link"""
+    @property
+    def carbide(self) -> int:
+        """The amount of carbide in the link"""
     @property
     def water(self) -> int:
-        """Amount of Water stored or carried by the link."""
+        """The amount of water in the link"""
     @property
     def slag(self) -> int:
-        """Amount of Slag stored or carried by the link."""
+        """The amount of slag in the link"""
     @property
     def oil(self) -> int:
-        """Amount of Oil stored or carried by the link."""
+        """The amount of oil in the link"""
     @property
     def cryofluid(self) -> int:
-        """Amount of Cryofluid stored or carried by the link."""
+        """The amount of cryofluid in the link"""
+    @property
+    def neoplasm(self) -> int:
+        """The amount of neoplasm in the link"""
+    @property
+    def arkycite(self) -> int:
+        """The amount of arkycite in the link"""
+    @property
+    def ozone(self) -> int:
+        """The amount of ozone in the link"""
+    @property
+    def hydrogen(self) -> int:
+        """The amount of hydrogen in the link"""
+    @property
+    def nitrogen(self) -> int:
+        """The amount of nitrogen in the link"""
+    @property
+    def cyanogen(self) -> int:
+        """The amount of cyanogen in the link"""
     @property
     def items(self) -> int:
         """The sum of all items contained or carried by the link."""
     @property
-    def first_item(self) -> Optional[Link]:
+    def first_item(self) -> Link | None:
         """A link to the first contained item carried by the link, if any."""
     @property
     def liquids(self) -> int:
@@ -333,24 +400,41 @@ class Senseable(ABC):
     def payload_type(self) -> int:
         """The type of the payload."""
     @property
+    def id(self) -> int:
+        """The ID of a unit/block/item/liquid. The inverse of the lookup operation."""
+    @property
     def enabled(self) -> bool:
         """Is this link enabled?"""
+    @property
+    def color(self):
+        """Illuminator color."""
 
 class Controllable(ABC):
     """
     Type hints for things that can be controlled.
     """
 
-    def enabled(self, enabled: bool):
+    @staticmethod
+    def enabled(enabled: bool):
         """Sets the link enabled or disabled, based on the given value."""
-    def shoot(self, x: int, y: int, enabled: bool = True):
+    @staticmethod
+    def shoot(x: int, y: int, enabled: bool = True):
         """Sets the link to shoot or not, and if shooting, the position."""
-    def ceasefire(self):
+    @staticmethod
+    def ceasefire():
         """Shorthand to stop firing."""
-    def color(self):
+    @staticmethod
+    def color():
         """Control color of an illuminator"""
-    def config(self, config=0):
+    @staticmethod
+    def config(config: Content = None):
         """Configure this block. config = eg Env.titanium for sorter1"""
+
+class Building(ABC, Senseable, Controllable):
+    pass
+
+class UnitType(ABC, Senseable, Controllable):
+    pass
 
 class Screen:
     """
@@ -405,7 +489,7 @@ class Screen:
         Draw a triangle with corners at `(x0, y0)`, `(x1, y1)` and `(x2, y2)`.
         """
     @staticmethod
-    def image(x: int, y: int, image: Resource, size: int, rotation: int = 0):
+    def image(x: int, y: int, image: Content, size: int, rotation: int = 0):
         """
         Draw the image resource centered at `(x, y)` with `size` and optional `rotation`.
         """
@@ -419,7 +503,7 @@ class Unit(Senseable):
 
     By default, this is not bound to anything. You should `bind` before using the other methods.
 
-    This unit should be used as a singleton. It is also senseable (you can use `Unit.x`, etc.).
+    This should be used as a singleton. It is also senseable (you can use `Unit.x`, etc.).
     """
 
     @staticmethod
@@ -456,12 +540,12 @@ class Unit(Senseable):
         Command the bound unit to approach the given coordinates, around a desired radius.
         """
     @staticmethod
-    def within(x: int, y: int, radius: int):
+    def within(x: int, y: int, radius: int) -> bool:
         """
         Return true if the bound unit is within the radius around the specified coordinates.
         """
     @staticmethod
-    def boost(amount: int):
+    def boost(enabled: bool):
         """
         Enable or disable the boost of the bound unit. The amount of boost is either 0 to disable or 1 to enable.
         """
@@ -471,7 +555,7 @@ class Unit(Senseable):
         Command the bound unit to pathfind to the x and y coordinates.
         """
     @staticmethod
-    def shoot(self, x: int = None, y: int = None):  # target
+    def shoot(x: int = None, y: int = None):  # target
         """
         Command the unit to shoot to the specified coordinates. Won't do anything if the coordinates are out of reach.
 
@@ -479,19 +563,19 @@ class Unit(Senseable):
         Note that horizon must be in movement for it to shoot.
         """
     @staticmethod
-    def target(self, x: int = None, y: int = None, shoot: bool = False):  # target
+    def target(x: int = None, y: int = None, shoot: bool = False):  # target
         """
         Command the unit to target (rotate to) the specified coordinates.
         If shoot is set to `True`, it will behave same as `shoot(x, y)`.
         """
     @staticmethod
-    def target_unit(self, unit, shoot: bool = True):  # targetp
+    def target_unit(unit, shoot: bool = True):  # targetp
         """
         Command the unit to target another unit with velocity prediction.
         If shoot is set to `True`, the bound unit will shoot as well.
         """
     @staticmethod
-    def ceasefire(self):  # target
+    def ceasefire():  # target
         """
         Command the unit to stop firing immediately.
         """
@@ -526,12 +610,19 @@ class Unit(Senseable):
         Command the unit to mine at the specified coordinates.
         """
     @property
-    def flag():
+    def flag() -> int:
         """
         Store a user-provided number in the unit for later use (for example, to "flag" this unit already was used).
         """
     @staticmethod
-    def locate(team: str, *, building=None, ore=None, spawn=None, damaged=None) -> Tuple[int]:
+    def locate(
+        team: str,
+        *,
+        building: Content = None,
+        ore: Content = None,
+        spawn: bool = None,
+        damaged: bool = None,
+    ) -> tuple[bool, int, int, Building | None]:
         """
         Locate an `'ally'` or '`enemy`' structure near the bound unit.
 
@@ -551,7 +642,7 @@ class Unit(Senseable):
         Both spawn and damaged can only be set to `True`.
         """
     @staticmethod
-    def build(self, x: int, y: int, block_type, rotation=0, config=0):  # build
+    def build(x: int, y: int, block_type: Content, rotation=0, config=0):  # build
         """
         Build a block at position `(x, y)` with rotation (0, 1, 2 or 3, the values indicating the number of 90º counter-clockwise steps).
         For example, conveyors start facing east with a rotation of 0, north with 1, west with 2, and south with 3.
@@ -561,7 +652,7 @@ class Unit(Senseable):
         You can pass another block variable as config to copy the configuration of that block.
         """
     @staticmethod
-    def get_block(self, x, y):  # getBlock
+    def get_block(x, y):  # getBlock-------------------------------------
         """
         Return the building and optionally its type located at `(x, y)`:
 
@@ -571,10 +662,13 @@ class Unit(Senseable):
         The building type can then be used as the `block_type` in `build()` and building may be used as the `config`.
         """
     @staticmethod
-    def unbind(self):
+    def unbind():
         """
         Unbinds the currently bound unit
         """
+    @staticmethod
+    def radar(*args, order=max, key="distance") -> UnitType | None:
+        """Locate units around the currently bound unit"""
 
 Unit = Unit()
 
@@ -585,7 +679,7 @@ class Mem:
     Note that `cell1` is used for function calls (but is unused otherwise).
     """
 
-def print(message: str, flush: Union[bool, str] = True, time: float = 0.0):
+def print(message: str, flush: bool | str = True, time: float = 0.0):
     """
     Print a message. f-strings are supported and encouraged to do string formatting.
 
@@ -610,3 +704,54 @@ def sleep(secs: float):
     """
     Sleep for the given amount of seconds.
     """
+
+def flip(a: int) -> int:
+    """Bitwise complement"""
+
+def max(a: float, b: float) -> float:
+    """Maximum of 2 numbers"""
+
+def min(a: float, b: float) -> float:
+    """Minimum of 2 numbers"""
+
+def xor(a: int, b: int) -> int:
+    """Bitwise XOR"""
+
+def atan2(a: float, b: float) -> float:
+    """Arc tangent, in degrees"""
+
+def dst(a: float, b: float) -> float:
+    """distance? angle diff? I have no idea."""
+
+def noise(a: float, b: float) -> float:
+    """2D simplex noise"""
+
+def abs(a: float) -> float:
+    """Absolute Value"""
+
+def log(a: float) -> float:
+    """Natural Logarithm"""
+
+def log10(a: float) -> float:
+    """Base 10 logarithm"""
+
+def sin(a: float) -> float:
+    """Sine, in degrees"""
+
+def cos(a: float) -> float:
+    """Cosine, in degrees"""
+
+def tan(a: float) -> float:
+    """Tangent, in degrees"""
+
+def floor(a: float) -> float:
+    """Round down"""
+
+def ceil(a: float) -> float:
+    """Round up"""
+
+def sqrt(a: float) -> float:
+    """Square root"""
+
+def rand(range: float) -> float:
+    """Random decimal in range [0, range)"""
