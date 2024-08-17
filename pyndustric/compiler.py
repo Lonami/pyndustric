@@ -759,15 +759,16 @@ class Compiler(ast.NodeVisitor):
             if len(node.args) != 1:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
 
-            if not isinstance(node.args[0], ast.Constant):
+            if isinstance(node.args[0], ast.Constant):
+                unit = node.args[0].value
+
+                if not isinstance(unit, str):
+                    raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
+                self.ins_append(f"ubind @{unit}")
+            elif isinstance(node.args[0], ast.Name):
+                self.ins_append(f"ubind {node.args[0].id}")
+            else:
                 raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
-
-            unit = node.args[0].value
-
-            if not isinstance(unit, str):
-                raise CompilerError(ERR_BAD_SYSCALL_ARGS, node)
-
-            self.ins_append(f"ubind @{unit}")
 
         elif method == "idle":
             if len(node.args) != 0:
@@ -1168,6 +1169,8 @@ class Compiler(ast.NodeVisitor):
                 return ("false", "true")[node.value]
             elif isinstance(node.value, (int, float)):
                 return str(node.value)
+            elif node.value is None:
+                return "@null"
             elif isinstance(node.value, str):
                 if (
                     len(str(node.value)) == 7 or len(str(node.value)) == 9
@@ -1309,7 +1312,8 @@ class Compiler(ast.NodeVisitor):
                         n1=len(node.args),
                         called=node.func.id,
                         n2=argc,
-                        plural1=plural(len(node.args), plural2=plural(argc)),
+                        plural1=plural(len(node.args)),
+                        plural2=plural(argc),
                     )
 
                 operands = " ".join(self.as_value(arg) for arg in node.args)
