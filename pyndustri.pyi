@@ -720,9 +720,6 @@ def xor(a: int, b: int) -> int:
 def atan2(a: float, b: float) -> float:
     """Arc tangent, in degrees"""
 
-def dst(a: float, b: float) -> float:
-    """distance? angle diff? I have no idea."""
-
 def noise(a: float, b: float) -> float:
     """2D simplex noise"""
 

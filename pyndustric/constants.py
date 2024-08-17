@@ -81,7 +81,6 @@ BUILTIN_DEFS = {
     "min": 2,
     "xor": 2,
     "atan2": 2,
-    "dst": 2,
     "noise": 2,
     "abs": 1,
     "log": 1,
