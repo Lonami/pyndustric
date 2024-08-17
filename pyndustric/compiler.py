@@ -1198,6 +1198,11 @@ class Compiler(ast.NodeVisitor):
                 self.ins_append(f"read {output} {cell} {val}")
                 return output
 
+            if isinstance(node.value, ast.Name) and node.value.id == "Link":
+                val = self.as_value(node.slice)
+                self.ins_append(f"getlink {output} {val}")
+                return output
+
             # container1[dynamic_res]
             # 'some_object'['some_resource']
             obj = self.as_value(node.value).strip('"')
