@@ -32,8 +32,10 @@ class _Label(_Instruction):
 
     def __str__(self):
         if self._lineno is None:
-            raise InternalCompilerError(
-                "lineno should be set. some instruction likely referenced this unstored label", None
+            raise CompilerError(
+                INTERNAL_COMPILER_ERR,
+                None,
+                "lineno should be set. some instruction likely referenced this unstored label",
             )
 
         return str(self._lineno)
@@ -63,7 +65,7 @@ class Function:
 
 
 class CompilerError(ValueError):
-    def __init__(self, code, node: ast.AST, **context):
+    def __init__(self, code, node: ast.AST, desc="", **context):
         if node is None:
             node = ast.Module(lineno=0, col_offset=0)  # dummy value
 
@@ -76,16 +78,8 @@ class CompilerError(ValueError):
         ]:
             context["unparsed"] = ast.unparse(node)
         super().__init__(
-            f"[{code}/{node.lineno}:{node.col_offset}] {ERROR_DESCRIPTIONS[code].format(**context)}"
+            f" {code}: {ERROR_DESCRIPTIONS[code].format(**context)}, line {node.lineno}, column {node.col_offset}\n{desc}"
         )
-
-
-class InternalCompilerError(CompilerError):
-    def __init__(self, code, node: ast.AST):
-        if node is None:
-            node = ast.Module(lineno=0, col_offset=0)  # dummy value
-
-        ValueError.__init__(self, f"[ICE/{node.lineno}:{node.col_offset}] {code}")
 
 
 class CompatTransformer(ast.NodeTransformer):
@@ -492,7 +486,7 @@ class Compiler(ast.NodeVisitor):
 
     def visit_Return(self, node):
         if not self._epilogue:
-            raise InternalCompilerError("return encountered with epilogue being unset", node)
+            raise CompilerError(INTERNAL_COMPILER_ERR, node, "return encountered with epilogue being unset")
 
         val = self.as_value(node.value)
         self.ins_append(f"set {REG_RET} {val}")
@@ -1199,6 +1193,11 @@ class Compiler(ast.NodeVisitor):
                 cell = node.value.attr
                 val = self.as_value(node.slice)
                 self.ins_append(f"read {output} {cell} {val}")
+                return output
+
+            if isinstance(node.value, ast.Name) and node.value.id == "Link":
+                val = self.as_value(node.slice)
+                self.ins_append(f"getlink {output} {val}")
                 return output
 
             # container1[dynamic_res]
