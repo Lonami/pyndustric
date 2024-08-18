@@ -13,12 +13,6 @@ def create_args():
 
     parser.add_argument("files", action="store", nargs="+", type=str, help="source files to compile")
     parser.add_argument(
-        "-i",
-        "--inline",
-        action="store_true",
-        help="inline all the functions (copy/paste them, instead of treating them like functions)",
-    )
-    parser.add_argument(
         "-c",
         "--clipboard",
         action="store_true",
@@ -43,7 +37,7 @@ def main():
         print(f"# compiling {file}...", file=sys.stderr)
         start = time.time()
         try:
-            masm = pyndustric.Compiler().compile(source, inline=args.inline)
+            masm = pyndustric.Compiler().compile(source)
         except pyndustric.CompilerError as e:
             trace = inspect.trace()[-1]
             print(f"[{trace.lineno}@{trace.function}]{str(e)}")

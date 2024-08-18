@@ -26,8 +26,6 @@ def masm_test(source_func):
     The special value `%tmpD`, where D is an integer, will be replaced by the matching `REG_TMP_FMT`.
     The temporary names are ordered by time of appearance (meaning `__pyc_tmp_2` can be `%tmp0` and
     `__pyc_tmp_1` be `%tmp1` if they appear in this order in the generated masm).
-
-    Any keyword arguments in the function are passed to the compiler
     """
     dbg_name = f"{source_func.__name__}:{inspect.currentframe().f_back.f_lineno}"
 
@@ -35,12 +33,7 @@ def masm_test(source_func):
     def wrapped():
         assert source_func.__doc__ is not None, "bad `masm_test` usage; def should have docstring"
         expected = as_masm(source_func.__doc__)
-        kwargs = {
-            k: v.default
-            for k, v in inspect.signature(source_func).parameters.items()
-            if v.default != inspect._empty
-        }
-        masm = pyndustric.Compiler().compile(source_func, **kwargs)
+        masm = pyndustric.Compiler().compile(source_func)
 
         tmp = 0
         while True:
@@ -56,12 +49,12 @@ def masm_test(source_func):
     return wrapped
 
 
-def expect_err(err, source, **kwargs):
+def expect_err(err, source):
     """
     Expect the error to be raised, and fail if it's not.
     """
     with pytest.raises(pyndustric.CompilerError, match=err):
-        pyndustric.Compiler().compile(source, **kwargs)
+        pyndustric.Compiler().compile(source)
 
 
 def test_all_err_have_desc_and_tests():
