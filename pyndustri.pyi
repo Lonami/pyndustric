@@ -4,6 +4,9 @@ from typing import Iterator, Optional, Union, Any, Callable
 class Link:
     """Represents a link."""
 
+    def __getitem__(self, n) -> Building | None:
+        """Gets the nth link"""
+
 class Env:
     """
     Access to special environmental variables.

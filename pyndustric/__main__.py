@@ -58,9 +58,9 @@ def main():
         )
 
     if args.clipboard:
-        import ait
+        import pyperclip
 
-        ait.copy(complete_masm)
+        pyperclip.copy(complete_masm)
 
 
 if __name__ == "__main__":

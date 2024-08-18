@@ -37,7 +37,7 @@ You can also redirect the output to a file to create a new file with the compile
 $ python -m pyndustric yourprogram.py > yourprogram.mlog
 ```
 
-If the optional dependency `autoit` is installed, `-c` or `--clipboard` can be used to
+If the optional dependency `pyperclip` is installed, `-c` or `--clipboard` can be used to
 automatically copy the code to the clipboard which allows for very fast edit cycles:
 
 ```sh
