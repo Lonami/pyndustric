@@ -729,6 +729,9 @@ def noise(a: float, b: float) -> float:
 def abs(a: float) -> float:
     """Absolute Value"""
 
+def len(a) -> float:
+    """The magnitude of a vector"""
+
 def log(a: float) -> float:
     """Natural Logarithm"""
 

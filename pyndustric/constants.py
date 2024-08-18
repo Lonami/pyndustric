@@ -85,6 +85,7 @@ BUILTIN_DEFS = {
     "atan2": 2,
     "noise": 2,
     "abs": 1,
+    "len": 1,
     "log": 1,
     "log10": 1,
     "sin": 1,
