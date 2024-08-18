@@ -209,6 +209,88 @@ def test_compile_function():
     assert masm == expected
 
 
+def test_inline():
+    def source():
+        def f():
+            x = 1
+
+        f()
+
+    def source_inline():
+        @inline
+        def f():
+            x = 1
+
+        f()
+
+    expected = as_masm(
+        """\
+        jump 5 always
+        read __pyc_rc_0 cell1 __pyc_sp
+        set x 1
+        op add @counter __pyc_rc_0 1
+        write @counter cell1 __pyc_sp
+        jump 2 always
+        set __pyc_tmp_1 __pyc_ret
+        """
+    )
+    expected_inline = as_masm(
+        """\
+        set x 1
+        """
+    )
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+    masm = pyndustric.Compiler().compile(source_inline)
+    assert masm == expected_inline
+
+
+def test_inline_return():
+    def source():
+        def f():
+            x = 1
+            return x
+
+        rtn = f()
+
+    def source_inline():
+        @inline
+        def f():
+            x = 1
+            return x
+
+        rtn = f()
+
+    expected = as_masm(
+        """\
+        jump 7 always
+        read __pyc_rc_0 cell1 __pyc_sp
+        set x 1
+        set __pyc_ret x
+        jump 6 always
+        op add @counter __pyc_rc_0 1
+        write @counter cell1 __pyc_sp
+        jump 2 always
+        set rtn __pyc_ret
+        """
+    )
+    expected_inline = as_masm(
+        """\
+        set x 1
+        set __pyc_ret x
+        set rtn __pyc_ret
+        """
+    )
+
+    masm = pyndustric.Compiler().compile(source)
+    assert masm == expected
+
+    masm = pyndustric.Compiler().compile(source_inline)
+    assert masm == expected_inline
+
+
 @masm_test
 def test_assignments():
     """
