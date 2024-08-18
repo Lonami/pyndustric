@@ -81,7 +81,7 @@ class Env:
     def ips(self) -> float:
         # https://github.com/Anuken/Mindustry/blob/b7f030eb1342fc4fd7c46274bfa9ed7af25f5829/core/src/mindustry/world/blocks/logic/LogicBlock.java#L128
         """Return the amount of instructions per second this processor is capable of executing."""
-    def __getattr__(self) -> Content:
+    def __getattr__(self, name) -> Content:
         """
         Return an arbitrary `@variable`.
 
@@ -206,7 +206,7 @@ class Senseable(ABC):
 
     @property
     def copper(self) -> int:
-        """The amount copper stored or carried by the link"""
+        """The amount of copper stored or carried by the link"""
     @property
     def lead(self) -> int:
         """The amount of lead stored or carried by the link"""
