@@ -1164,3 +1164,11 @@ def test_None():
     set foo @null
     """
     foo = None
+
+
+@masm_test
+def test_Link():
+    """
+    getlink l 2
+    """
+    l = Link[2]
