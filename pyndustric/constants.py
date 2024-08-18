@@ -1,22 +1,23 @@
 import ast
 
-ERR_COMPLEX_ASSIGN = "E002"
-ERR_COMPLEX_VALUE = "E003"
-ERR_UNSUPPORTED_OP = "E004"
-ERR_UNSUPPORTED_ITER = "E005"
-ERR_BAD_ITER_ARGS = "E006"
-ERR_UNSUPPORTED_IMPORT = "E007"
-ERR_UNSUPPORTED_EXPR = "E008"
-ERR_UNSUPPORTED_SYSCALL = "E009"
-ERR_BAD_SYSCALL_ARGS = "E010"
-ERR_NESTED_DEF = "E011"
-ERR_INVALID_DEF = "E012"
-ERR_REDEF = "E013"
-ERR_NO_DEF = "E014"
-ERR_ARGC_MISMATCH = "E015"
-ERR_TOO_LONG = "E016"
-ERR_INVALID_SOURCE = "E017"
-ERR_BAD_TUPLE_ASSIGN = "E018"
+ERR_COMPLEX_ASSIGN = "NoComplexError"
+ERR_COMPLEX_VALUE = "NoComplexMathError"
+ERR_UNSUPPORTED_OP = "UnsupportedOperationError"
+ERR_UNSUPPORTED_ITER = "UnsupportedIteratorError"
+ERR_BAD_ITER_ARGS = "InvalidRangeError"
+ERR_UNSUPPORTED_IMPORT = "InvalidImportError"
+ERR_UNSUPPORTED_EXPR = "StandaloneError"
+ERR_UNSUPPORTED_SYSCALL = "InvalidSysCallError"
+ERR_BAD_SYSCALL_ARGS = "InvalidSysCallArgsError"
+ERR_NESTED_DEF = "NoRecursionError"
+ERR_INVALID_DEF = "FuncDefError"
+ERR_REDEF = "RedefinitionError"
+ERR_NO_DEF = "UndefinedFuncError"
+ERR_ARGC_MISMATCH = "ArgumentsError"
+ERR_TOO_LONG = "OverflowError"
+ERR_INVALID_SOURCE = "CompilerError"
+ERR_BAD_TUPLE_ASSIGN = "BadTupleError"
+INTERNAL_COMPILER_ERR = "InternalCompilerError"
 
 ERROR_DESCRIPTIONS = {
     ERR_COMPLEX_ASSIGN: "cannot perform complex assignment `{unparsed}`",
@@ -36,6 +37,7 @@ ERROR_DESCRIPTIONS = {
     ERR_TOO_LONG: "the program is too long to fit in a logic processor",
     ERR_INVALID_SOURCE: "the provided source type to compile is not supported",
     ERR_BAD_TUPLE_ASSIGN: "can only assign to a tuple if the right-hand side is a tuple of the same length",
+    INTERNAL_COMPILER_ERR: "internal compiler error",
 }
 
 BIN_CMP = {
