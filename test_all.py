@@ -1161,7 +1161,7 @@ def test_complex_compare():
 @masm_test
 def test_None():
     """
-    set foo @null
+    set foo null
     """
     foo = None
 
