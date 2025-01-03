@@ -1147,7 +1147,7 @@ class Compiler(ast.NodeVisitor):
             elif isinstance(node.value, (int, float)):
                 return str(node.value)
             elif node.value is None:
-                return "@null"
+                return "null"
             elif isinstance(node.value, str):
                 if (
                     len(str(node.value)) == 7 or len(str(node.value)) == 9
