@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import Iterator, Any, Callable
+from typing import Iterator, TypeVar, Callable
 
 class Link:
     """Represents a link."""
@@ -707,8 +707,8 @@ def sleep(secs: float):
     """
     Sleep for the given amount of seconds.
     """
-
-def inline(func: Callable[..., Any]) -> Callable[..., Any]:
+T = TypeVar('T')
+def inline(func: Callable[..., T]) -> Callable[..., T]:
     """Compile the function by copy/pasting the code into each function call"""
 
 def flip(a: int) -> int:
