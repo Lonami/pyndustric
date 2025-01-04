@@ -707,7 +707,9 @@ def sleep(secs: float):
     """
     Sleep for the given amount of seconds.
     """
-T = TypeVar('T')
+
+T = TypeVar("T")
+
 def inline(func: Callable[..., T]) -> Callable[..., T]:
     """Compile the function by copy/pasting the code into each function call"""
 
