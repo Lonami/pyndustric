@@ -445,7 +445,7 @@ class Compiler(ast.NodeVisitor):
 
         decorators = [i.id for i in node.decorator_list]
         # Check that all the decorators are valid
-        if any(map(lambda decorator: decorator not in ALLOWED_DECORATORS, decorators)):
+        if any(decorator not in ALLOWED_DECORATORS for decorator in decorators):
             # TODO: Add description specifiying that the decorator is the problem
             raise CompilerError(ERR_INVALID_DEF, node, a=node.name)
 
