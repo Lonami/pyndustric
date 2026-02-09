@@ -1,3 +1,7 @@
+Moved to https://codeberg.org/Lonami/pyndustric. The GitHub repository may be deleted in the future.
+
+---
+
 # pyndustric
 
 A compiler from Python to Mindustry's assembly (logic programming language).
